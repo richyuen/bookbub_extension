@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BookBub Auto-Purchase</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>BookBub Auto-Purchase</h1>
+
+    <div class="status-section">
+      <div class="status-item">
+        <span class="label">Status:</span>
+        <span id="status" class="value">Idle</span>
+      </div>
+    </div>
+
+    <div class="stats-section">
+      <h2>Current Session</h2>
+      <div class="stat-item">
+        <span class="label">Processed:</span>
+        <span id="processed" class="value">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">Purchased:</span>
+        <span id="purchased" class="value">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">Skipped:</span>
+        <span id="skipped" class="value">0</span>
+      </div>
+    </div>
+
+    <div class="storage-section">
+      <h2>Storage</h2>
+      <div class="stat-item">
+        <span class="label">Total Books Tracked:</span>
+        <span id="total-books" class="value">0</span>
+      </div>
+      <button id="clear-storage" class="btn btn-warning">Clear Purchase History</button>
+    </div>
+
+    <div class="instructions">
+      <h3>How to Use</h3>
+      <ol>
+        <li>Ensure you're logged in to Amazon</li>
+        <li>Enable 1-Click purchasing on Amazon</li>
+        <li>Visit a BookBub deals page</li>
+        <li>Click "Start Auto-Purchase" button</li>
+        <li>Extension will process books automatically</li>
+      </ol>
+    </div>
+
+    <div class="footer">
+      <p>Version 1.0.0</p>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

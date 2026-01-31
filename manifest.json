@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "BookBub Auto-Purchase",
+  "version": "1.0.0",
+  "description": "Automates claiming free books from BookBub deals using Amazon 1-Click purchasing",
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "*://www.bookbub.com/*",
+    "*://www.amazon.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://www.bookbub.com/*"],
+      "js": ["content/bookbub.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["*://www.amazon.com/*"],
+      "js": ["content/amazon.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
