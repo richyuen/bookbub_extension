@@ -2,7 +2,7 @@
 
 let currentPage = 1;
 let isProcessing = false;
-let autoNextPageEnabled = false; // Can be toggled via button
+let autoNextPageEnabled = true; // Loaded from storage
 
 // Initialize when page loads
 if (document.readyState === 'loading') {
@@ -12,16 +12,29 @@ if (document.readyState === 'loading') {
 }
 
 function init() {
+  // Load auto-pagination setting from storage
+  loadAutoPaginationSetting();
+
   // Check if we're on a deals page
   if (window.location.pathname.includes('/ebook-deals') ||
       window.location.pathname.includes('/deals')) {
     injectButton();
+
+    // Check if we should auto-start (came from previous page via pagination)
+    checkAndAutoStart();
   }
 
   // Listen for processing complete messages
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'PROCESSING_COMPLETE') {
       handleProcessingComplete(message.stats);
+    }
+  });
+
+  // Listen for settings changes
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === 'local' && changes.settings) {
+      loadAutoPaginationSetting();
     }
   });
 }
@@ -63,16 +76,21 @@ function injectButton() {
 
   button.addEventListener('click', handleButtonClick);
 
-  // Right-click to toggle auto-pagination
-  button.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-    autoNextPageEnabled = !autoNextPageEnabled;
-    updateButtonText(button);
-    alert(`Auto-pagination ${autoNextPageEnabled ? 'ENABLED' : 'DISABLED'}\n\n` +
-          `${autoNextPageEnabled ? 'Will automatically move to next page if unpurchased books found.' : 'Will stop after current page.'}`);
-  });
-
   document.body.appendChild(button);
+}
+
+// Load auto-pagination setting from storage
+function loadAutoPaginationSetting() {
+  chrome.storage.local.get(['settings'], (result) => {
+    const settings = result.settings || { delayBetweenBooks: 1000, autoNextPage: true };
+    autoNextPageEnabled = settings.autoNextPage;
+
+    // Update button text if it exists
+    const button = document.getElementById('bookbub-auto-purchase-btn');
+    if (button) {
+      updateButtonText(button);
+    }
+  });
 }
 
 // Update button text based on auto-pagination state
@@ -81,20 +99,24 @@ function updateButtonText(button) {
     ? 'Start Auto-Purchase (Auto-Page ON)'
     : 'Start Auto-Purchase';
   button.title = autoNextPageEnabled
-    ? 'Left-click: Start processing\nRight-click: Disable auto-pagination'
-    : 'Left-click: Start processing\nRight-click: Enable auto-pagination';
+    ? 'Click to start processing books. Auto-pagination enabled.'
+    : 'Click to start processing books. Auto-pagination disabled.';
 }
 
 // Handle button click
 async function handleButtonClick() {
+  // If already processing, clicking stops it
   if (isProcessing) {
-    alert('Already processing books. Please wait...');
+    const confirmed = confirm('Stop processing books?');
+    if (confirmed) {
+      chrome.runtime.sendMessage({ type: 'STOP_PROCESSING' });
+      resetButton();
+    }
     return;
   }
 
   const button = document.getElementById('bookbub-auto-purchase-btn');
-  button.disabled = true;
-  button.textContent = 'Processing...';
+  button.textContent = 'Processing... (click to stop)';
   button.style.background = '#FFA500';
   isProcessing = true;
 
@@ -105,6 +127,11 @@ async function handleButtonClick() {
       alert('No unpurchased books found on this page.');
       resetButton();
       return;
+    }
+
+    // Mark the last book
+    if (books.length > 0) {
+      books[books.length - 1].isLastBook = true;
     }
 
     // Send books to background script for processing
@@ -313,14 +340,9 @@ function handleProcessingComplete(stats) {
   isProcessing = false;
 
   // Check if we should go to next page
-  if (autoNextPageEnabled && stats.processed > 0 && shouldGoToNextPage(stats)) {
-    // Found unpurchased books, continue to next page
-    const message = `Page ${currentPage} complete!\n\n` +
-                    `Processed: ${stats.processed}\n` +
-                    `Purchased: ${stats.purchased}\n` +
-                    `Skipped: ${stats.skipped}\n\n` +
-                    `Moving to next page...`;
-    alert(message);
+  if (autoNextPageEnabled && shouldGoToNextPage(stats)) {
+    // Last book was purchased, continue to next page
+    console.log(`Page complete. Processed: ${stats.processed}, Purchased: ${stats.purchased}, Skipped: ${stats.skipped}. Last book purchased - moving to next page...`);
     goToNextPage();
   } else {
     // All done
@@ -328,7 +350,7 @@ function handleProcessingComplete(stats) {
                     `Processed: ${stats.processed}\n` +
                     `Purchased: ${stats.purchased}\n` +
                     `Skipped: ${stats.skipped}\n\n` +
-                    `${autoNextPageEnabled && stats.processed === 0 ? 'No more unpurchased books found.' : 'Done!'}`;
+                    `${autoNextPageEnabled && !stats.lastBookPurchased ? 'Last book not purchased - stopping.' : 'Done!'}`;
     alert(message);
     resetButton();
   }
@@ -338,9 +360,27 @@ function handleProcessingComplete(stats) {
 function shouldGoToNextPage(stats) {
   if (!autoNextPageEnabled) return false;
 
-  // If we processed any books on this page, there might be more on the next page
-  // Continue until we find a page with 0 processed books
-  return stats.processed > 0;
+  // Only continue to next page if the LAST book on this page was purchased
+  return stats.lastBookPurchased === true;
+}
+
+// Check if we should auto-start processing (came from pagination)
+function checkAndAutoStart() {
+  chrome.storage.local.get(['autoStartPagination'], (result) => {
+    if (result.autoStartPagination) {
+      // Clear the flag
+      chrome.storage.local.remove('autoStartPagination');
+
+      // Wait for page to fully load, then auto-click button
+      setTimeout(() => {
+        const button = document.getElementById('bookbub-auto-purchase-btn');
+        if (button && !isProcessing) {
+          console.log('Auto-starting pagination on new page...');
+          button.click();
+        }
+      }, 2000); // Wait 2 seconds for page to fully load
+    }
+  });
 }
 
 // Navigate to next page
@@ -354,16 +394,18 @@ function goToNextPage() {
   // Set new page number
   url.searchParams.set('page', nextPage);
 
-  // Navigate to next page
-  window.location.href = url.toString();
+  // Set flag to auto-start on next page
+  chrome.storage.local.set({ autoStartPagination: true }, () => {
+    // Navigate to next page
+    window.location.href = url.toString();
+  });
 }
 
 // Reset button to initial state
 function resetButton() {
   const button = document.getElementById('bookbub-auto-purchase-btn');
   if (button) {
-    button.disabled = false;
-    button.textContent = 'Start Auto-Purchase';
+    updateButtonText(button);
     button.style.background = '#4CAF50';
   }
   isProcessing = false;

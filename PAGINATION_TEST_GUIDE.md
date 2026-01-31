@@ -8,20 +8,20 @@ The extension can now automatically move to the next BookBub page if it finds un
 
 1. **Reload extension:** `edge://extensions/` → reload button
 
-2. **Go to BookBub** (any deals page with filters)
+2. **Open extension popup** (click extension icon in toolbar)
 
-3. **Right-click the green "Start Auto-Purchase" button**
-   - A dialog appears: "Auto-pagination ENABLED"
-   - Button text changes to: **"Start Auto-Purchase (Auto-Page ON)"**
+3. **Toggle "Auto-Pagination" setting**
+   - In Settings section, flip the toggle switch to ON (green)
+   - Button on BookBub page changes to: **"Start Auto-Purchase (Auto-Page ON)"**
 
-4. **Right-click again** to disable (for testing)
-   - Dialog: "Auto-pagination DISABLED"
-   - Button text: **"Start Auto-Purchase"**
+4. **Toggle OFF** to disable (for testing)
+   - Flip toggle switch to OFF (gray)
+   - Button text changes to: **"Start Auto-Purchase"**
 
 ## Test Scenario 1: Single Page (Baseline)
 
 **Setup:**
-- Ensure auto-pagination is **OFF** (right-click if needed)
+- Ensure auto-pagination is **OFF** (toggle in popup settings if needed)
 - Go to a BookBub page with some unpurchased books
 
 **Expected:**
@@ -33,7 +33,7 @@ The extension can now automatically move to the next BookBub page if it finds un
 ## Test Scenario 2: Multiple Pages (Auto-Pagination)
 
 **Setup:**
-- Enable auto-pagination (right-click button until it says "Auto-Page ON")
+- Enable auto-pagination (toggle ON in popup settings)
 - Go to page 1 of BookBub search results
 
 **Expected:**
@@ -89,9 +89,8 @@ To specifically test "if last book is unpurchased, go to next page":
 - Start processing
 
 **Test:**
-1. While processing page 1, **right-click button**
-2. Disable auto-pagination
-3. Wait for page 1 to complete
+1. While processing page 1, **open popup and toggle auto-pagination OFF**
+2. Wait for page 1 to complete
 
 **Expected:**
 - Page 1 finishes
@@ -126,9 +125,13 @@ if (autoPageEnabled && processedBooks > 0) {
 - `Start Auto-Purchase` → Auto-page OFF
 - `Start Auto-Purchase (Auto-Page ON)` → Auto-page ON
 
+**Popup Settings:**
+- Toggle switch: Green (ON) / Gray (OFF)
+- Setting description: "Automatically move to next page if unpurchased books found"
+
 **Tooltip (hover):**
-- Shows: "Left-click: Start processing"
-- Shows: "Right-click: Enable/Disable auto-pagination"
+- When ON: "Click to start processing books. Auto-pagination enabled."
+- When OFF: "Click to start processing books. Auto-pagination disabled."
 
 **Alerts:**
 - **During pagination:** "Page X complete! ... Moving to next page..."
@@ -147,7 +150,7 @@ if (autoPageEnabled && processedBooks > 0) {
 6. Repeat 15 times... (30+ minutes total)
 
 **With auto-pagination:**
-1. Enable auto-pagination (right-click)
+1. Enable auto-pagination (toggle ON in popup)
 2. Click button on page 1
 3. Walk away ☕
 4. Come back 30 minutes later
@@ -157,14 +160,14 @@ if (autoPageEnabled && processedBooks > 0) {
 
 - **Manual trigger:** Must click button to start
 - **Clear progress:** Alerts show page number and stats
-- **Easy disable:** Right-click any time to turn off
+- **Easy disable:** Toggle OFF in popup any time
 - **Stop on empty:** Won't infinitely loop through pages
-- **Persistent state:** Auto-page setting survives page reload
+- **Persistent state:** Auto-page setting survives page reload and browser restart
 
 ## Troubleshooting
 
 **Issue:** Auto-pagination not working
-- **Solution:** Right-click button to verify it says "Auto-Page ON"
+- **Solution:** Open popup and verify toggle is ON (green)
 
 **Issue:** Processes but doesn't go to next page
 - **Solution:** Check if any unpurchased books were found (needs processed > 0)
@@ -173,7 +176,10 @@ if (autoPageEnabled && processedBooks > 0) {
 - **Solution:** Extension needs reload after enabling feature
 
 **Issue:** Button doesn't show "(Auto-Page ON)"
-- **Solution:** Reload extension, refresh BookBub page
+- **Solution:** Check popup settings, reload extension, refresh BookBub page
+
+**Issue:** Toggle switch doesn't change button text
+- **Solution:** Reload BookBub page to pick up setting change
 
 ## Current Limitations
 

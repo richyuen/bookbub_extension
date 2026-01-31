@@ -11,8 +11,12 @@ async function init() {
   // Load storage info
   await updateStorageInfo();
 
+  // Load settings
+  await loadSettings();
+
   // Set up event listeners
   document.getElementById('clear-storage').addEventListener('click', handleClearStorage);
+  document.getElementById('auto-pagination').addEventListener('change', handleAutoPaginationToggle);
 
   // Update stats every 2 seconds while popup is open
   setInterval(updateStats, 2000);
@@ -73,9 +77,34 @@ async function handleClearStorage() {
   updateStats();
 }
 
+// Load settings from storage
+async function loadSettings() {
+  chrome.storage.local.get(['settings'], (result) => {
+    const settings = result.settings || { delayBetweenBooks: 1000, autoNextPage: true };
+    document.getElementById('auto-pagination').checked = settings.autoNextPage;
+  });
+}
+
+// Handle auto-pagination toggle
+async function handleAutoPaginationToggle(event) {
+  const enabled = event.target.checked;
+
+  chrome.storage.local.get(['settings'], (result) => {
+    const settings = result.settings || { delayBetweenBooks: 1000, autoNextPage: true };
+    settings.autoNextPage = enabled;
+
+    chrome.storage.local.set({ settings }, () => {
+      console.log('Auto-pagination setting updated:', enabled);
+    });
+  });
+}
+
 // Listen for storage changes
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === 'local' && changes.purchasedBooks) {
     updateStorageInfo();
+  }
+  if (areaName === 'local' && changes.settings) {
+    loadSettings();
   }
 });

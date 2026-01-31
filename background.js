@@ -2,10 +2,12 @@
 
 let processingQueue = [];
 let isProcessing = false;
+let shouldStopProcessing = false;
 let currentStats = {
   processed: 0,
   purchased: 0,
-  skipped: 0
+  skipped: 0,
+  lastBookPurchased: false
 };
 
 // Initialize storage on installation
@@ -54,11 +56,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.type === 'GET_STATS') {
     sendResponse({ stats: currentStats });
   } else if (message.type === 'RESET_STATS') {
-    currentStats = { processed: 0, purchased: 0, skipped: 0 };
+    currentStats = { processed: 0, purchased: 0, skipped: 0, lastBookPurchased: false };
     sendResponse({ success: true });
   } else if (message.type === 'CHECK_IF_PURCHASED') {
     checkIfPurchased(message.bookId, sendResponse);
     return true; // Keep channel open for async response
+  } else if (message.type === 'STOP_PROCESSING') {
+    shouldStopProcessing = true;
+    console.log('Stop processing requested by user');
+    sendResponse({ success: true });
   }
 
   return false;
@@ -75,10 +81,17 @@ async function handleStartProcessing(books, bookbubTabId) {
 
   processingQueue = books;
   isProcessing = true;
-  currentStats = { processed: 0, purchased: 0, skipped: 0 };
+  shouldStopProcessing = false;
+  currentStats = { processed: 0, purchased: 0, skipped: 0, lastBookPurchased: false };
 
   // Process books sequentially
   for (const book of processingQueue) {
+    // Check if user requested stop
+    if (shouldStopProcessing) {
+      console.log('Processing stopped by user');
+      break;
+    }
+
     await processBook(book);
 
     // Get delay from settings
@@ -86,8 +99,9 @@ async function handleStartProcessing(books, bookbubTabId) {
     await delay(settings.delayBetweenBooks);
   }
 
-  // All books processed, notify BookBub page
+  // All books processed (or stopped), notify BookBub page
   isProcessing = false;
+  shouldStopProcessing = false;
   console.log('Processing complete. Stats:', currentStats);
 
   chrome.tabs.sendMessage(bookbubTabId, {
@@ -128,7 +142,8 @@ async function processBook(book) {
           await chrome.tabs.sendMessage(tab.id, {
             type: 'SET_ORIGINAL_BOOK_ID',
             originalBookId: book.id,
-            bookTitle: book.title
+            bookTitle: book.title,
+            isLastBook: book.isLastBook || false
           });
           break;
         } catch (error) {
@@ -203,6 +218,11 @@ function waitForTabProcessing(tabId) {
 async function handlePurchaseComplete(message) {
   console.log(`✓ Purchased: ${message.bookTitle}`);
   currentStats.purchased++;
+
+  // Check if this was the last book
+  if (message.isLastBook) {
+    currentStats.lastBookPurchased = true;
+  }
 
   await markBookPurchased(message.bookId, message.bookTitle);
   if (message.originalBookId && message.originalBookId !== message.bookId) {

@@ -3,12 +3,14 @@
 // Store original book ID from BookBub (will be sent by background script)
 let originalBookId = null;
 let originalBookTitle = null;
+let isLastBook = false;
 
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'SET_ORIGINAL_BOOK_ID') {
     originalBookId = message.originalBookId;
     originalBookTitle = message.bookTitle;
+    isLastBook = message.isLastBook || false;
   }
 });
 
@@ -170,34 +172,27 @@ function isFree(price) {
 
 // Check if book is already in library
 function isInLibrary() {
-  const ownedIndicators = [
-    'Read for Free',
-    'Read for free',
-    'Already purchased',
-    'Read now',
-    'Read Now',
-    'You own this book',
-    'In your library',
-    'Purchased',
-    'Owned'
-  ];
+  // Only check button text for ownership indicators (not entire page body)
+  const buttons = document.querySelectorAll('button, a.a-button, input[type="submit"], span[role="button"]');
+  for (const button of buttons) {
+    const buttonText = button.textContent.trim().toLowerCase();
 
-  const bodyText = document.body.textContent;
-  for (const indicator of ownedIndicators) {
-    if (bodyText.includes(indicator)) {
+    // Very specific ownership phrases only
+    if (buttonText.includes('read for free') ||
+        buttonText.includes('already purchased') ||
+        buttonText === 'read now' ||
+        buttonText.includes('you own this') ||
+        buttonText.includes('in your library')) {
       return true;
     }
   }
 
-  // Check for specific button text
-  const buttons = document.querySelectorAll('button, a.a-button, input[type="submit"], span[role="button"]');
-  for (const button of buttons) {
-    const buttonText = button.textContent.trim();
-    if (buttonText.includes('Read for Free') ||
-        buttonText.includes('Read for free') ||
-        buttonText.includes('Read now') ||
-        buttonText.includes('Read Now') ||
-        buttonText.includes('Already purchased')) {
+  // Check for ownership badges/indicators in the buy box area only
+  const buyBox = document.querySelector('#buybox, #buybox_feature_div, #tmmSwatches, #formats');
+  if (buyBox) {
+    const buyBoxText = buyBox.textContent.toLowerCase();
+    if (buyBoxText.includes('you own this book') ||
+        buyBoxText.includes('already in your library')) {
       return true;
     }
   }
@@ -258,7 +253,8 @@ function notifyPurchaseComplete(bookTitle, bookId) {
     type: 'PURCHASE_COMPLETE',
     bookTitle: bookTitle,
     bookId: bookId,  // Amazon ASIN
-    originalBookId: originalBookId  // BookBub promotion ID (if available)
+    originalBookId: originalBookId,  // BookBub promotion ID (if available)
+    isLastBook: isLastBook
   });
 }
 
