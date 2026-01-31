@@ -1,7 +1,5 @@
 // Content script for Amazon pages
 
-console.log('Amazon content script loaded');
-
 // Store original book ID from BookBub (will be sent by background script)
 let originalBookId = null;
 let originalBookTitle = null;
@@ -11,7 +9,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'SET_ORIGINAL_BOOK_ID') {
     originalBookId = message.originalBookId;
     originalBookTitle = message.bookTitle;
-    console.log('Received original book ID:', originalBookId);
   }
 });
 
@@ -23,29 +20,18 @@ if (document.readyState === 'loading') {
 }
 
 async function init() {
-  console.log('Initializing Amazon content script');
+  // Wait for page to load
+  await delay(1000);
 
-  // Wait a bit for dynamic content to load
-  await delay(2000);
-
-  // Wait for original book ID from background script (up to 10 seconds)
-  // Background may take time to send due to redirect delay
+  // Wait for original book ID from background script
   let waitCount = 0;
-  while (!originalBookId && waitCount < 20) {
+  while (!originalBookId && waitCount < 10) {
     await delay(500);
     waitCount++;
   }
 
-  if (originalBookId) {
-    console.log('✓ Received original BookBub ID:', originalBookId);
-  } else {
-    console.error('❌ Timed out waiting for original book ID after 10 seconds');
-    console.error('   Book will only be saved under Amazon ASIN');
-  }
-
   // Check if this is a Kindle book page
   if (!isKindleBookPage()) {
-    console.log('Not a Kindle book page');
     notifySkipped('Not a Kindle book page');
     return;
   }
@@ -54,23 +40,15 @@ async function init() {
   const bookTitle = getBookTitle();
   const bookId = getBookId();
 
-  console.log(`Book: ${bookTitle}`);
-  console.log(`Book ID: ${bookId}`);
-
-  // Check if already in library FIRST (before checking price)
-  // If book is owned, Amazon doesn't show price, so check library first
+  // Check if already in library FIRST
   if (isInLibrary()) {
-    console.log('Book is already in library');
     notifySkipped('Already in library', bookTitle, bookId);
     return;
   }
 
-  // Now check if book is free (only for books not already owned)
+  // Check if book is free
   const price = getBookPrice();
-  console.log(`Price: ${price}`);
-
   if (!isFree(price)) {
-    console.log('Book is not free, skipping');
     notifySkipped('Not free', bookTitle, bookId);
     return;
   }
@@ -79,10 +57,8 @@ async function init() {
   const success = await purchaseWithOneClick();
 
   if (success) {
-    console.log('Purchase successful');
     notifyPurchaseComplete(bookTitle, bookId);
   } else {
-    console.log('Purchase failed or button not found');
     notifySkipped('Purchase button not found', bookTitle, bookId);
   }
 }
@@ -156,8 +132,6 @@ function getBookId() {
 
 // Get book price
 function getBookPrice() {
-  console.log('[getBookPrice] Searching for price...');
-
   const priceSelectors = [
     '.a-price .a-offscreen',
     '#kindle-price',
@@ -170,22 +144,17 @@ function getBookPrice() {
     const element = document.querySelector(selector);
     if (element) {
       const priceText = element.textContent.trim();
-      console.log(`[getBookPrice] Found element with selector "${selector}": "${priceText}"`);
       if (priceText.includes('$')) {
-        console.log(`[getBookPrice] Returning: "${priceText}"`);
         return priceText;
       }
     }
   }
 
   // Check for "Free" text
-  const bodyText = document.body.textContent;
-  if (bodyText.includes('$0.00')) {
-    console.log('[getBookPrice] Found $0.00 in body text');
+  if (document.body.textContent.includes('$0.00')) {
     return '$0.00';
   }
 
-  console.log('[getBookPrice] No price found, returning "Unknown"');
   return 'Unknown';
 }
 
@@ -201,9 +170,6 @@ function isFree(price) {
 
 // Check if book is already in library
 function isInLibrary() {
-  console.log('[isInLibrary] Checking if book is already owned...');
-
-  // Look for indicators that book is already owned
   const ownedIndicators = [
     'Read for Free',
     'Read for free',
@@ -217,18 +183,14 @@ function isInLibrary() {
   ];
 
   const bodyText = document.body.textContent;
-
   for (const indicator of ownedIndicators) {
     if (bodyText.includes(indicator)) {
-      console.log(`[isInLibrary] ✓ Found indicator: "${indicator}"`);
       return true;
     }
   }
 
   // Check for specific button text
   const buttons = document.querySelectorAll('button, a.a-button, input[type="submit"], span[role="button"]');
-  console.log(`[isInLibrary] Checking ${buttons.length} buttons for ownership indicators...`);
-
   for (const button of buttons) {
     const buttonText = button.textContent.trim();
     if (buttonText.includes('Read for Free') ||
@@ -236,15 +198,8 @@ function isInLibrary() {
         buttonText.includes('Read now') ||
         buttonText.includes('Read Now') ||
         buttonText.includes('Already purchased')) {
-      console.log(`[isInLibrary] ✓ Found button with text: "${buttonText}"`);
       return true;
     }
-  }
-
-  console.log('[isInLibrary] ✗ No ownership indicators found');
-  console.log('[isInLibrary] Sample buttons on page:');
-  for (let i = 0; i < Math.min(5, buttons.length); i++) {
-    console.log(`  Button ${i + 1}: "${buttons[i].textContent.trim().substring(0, 50)}"`);
   }
 
   return false;
@@ -252,8 +207,6 @@ function isInLibrary() {
 
 // Purchase book using 1-Click
 async function purchaseWithOneClick() {
-  console.log('Attempting 1-Click purchase...');
-
   // Look for 1-Click button
   const oneClickSelectors = [
     '#one-click-button',
@@ -267,10 +220,7 @@ async function purchaseWithOneClick() {
   let button = null;
   for (const selector of oneClickSelectors) {
     button = document.querySelector(selector);
-    if (button) {
-      console.log(`Found 1-Click button with selector: ${selector}`);
-      break;
-    }
+    if (button) break;
   }
 
   if (!button) {
@@ -282,29 +232,22 @@ async function purchaseWithOneClick() {
           text.includes('1-Click') ||
           text.includes('Buy with 1-Click')) {
         button = btn;
-        console.log('Found 1-Click button by text content');
         break;
       }
     }
   }
 
-  if (!button) {
-    console.error('1-Click button not found');
-    return false;
-  }
+  if (!button) return false;
 
-  // Scroll button into view
+  // Scroll button into view and click
   button.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  await delay(500);
+  await delay(300);
 
-  // Click the button
   try {
     button.click();
-    console.log('1-Click button clicked');
-    await delay(1000);
+    await delay(500);
     return true;
   } catch (error) {
-    console.error('Error clicking 1-Click button:', error);
     return false;
   }
 }

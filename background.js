@@ -17,7 +17,7 @@ chrome.runtime.onInstalled.addListener(() => {
     if (!result.settings) {
       chrome.storage.local.set({
         settings: {
-          delayBetweenBooks: 3000,
+          delayBetweenBooks: 1000, // 1 second between books (faster)
           autoNextPage: true
         }
       });
@@ -121,35 +121,28 @@ async function processBook(book) {
     });
 
     // Send the original book data to the Amazon tab
-    // Retry multiple times with longer delays to account for redirect time
     const sendBookId = async () => {
-      // Wait for redirect to complete and page to load
-      for (let i = 0; i < 15; i++) {
-        await delay(1000); // 1 second between retries
+      for (let i = 0; i < 12; i++) {
+        await delay(500);
         try {
           await chrome.tabs.sendMessage(tab.id, {
             type: 'SET_ORIGINAL_BOOK_ID',
             originalBookId: book.id,
             bookTitle: book.title
           });
-          console.log(`✓ Sent original book ID to tab ${tab.id} (attempt ${i + 1})`);
           break;
         } catch (error) {
-          if (i === 14) {
-            console.error('❌ Failed to send original book ID after 15 attempts (15 seconds)');
-            console.error('   This book will only be saved under Amazon ASIN, not BookBub ID');
-          }
-          // Tab might still be redirecting or content script not loaded yet, retry
+          // Tab still redirecting, retry
         }
       }
     };
-    sendBookId(); // Don't await, let it run in background
+    sendBookId();
 
     // Wait for the tab to load and content script to process
     await waitForTabProcessing(tab.id);
 
     // Close the tab after processing
-    await delay(2000); // Brief delay before closing
+    await delay(500);
     chrome.tabs.remove(tab.id);
   } catch (error) {
     console.error(`Error processing book ${book.title}:`, error);
@@ -208,83 +201,51 @@ function waitForTabProcessing(tabId) {
 
 // Handle purchase completion notification
 async function handlePurchaseComplete(message) {
-  console.log(`Purchase complete: ${message.bookTitle}`);
-  console.log(`  Amazon ASIN: ${message.bookId}`);
-  console.log(`  BookBub ID: ${message.originalBookId || 'NOT SET'}`);
+  console.log(`✓ Purchased: ${message.bookTitle}`);
   currentStats.purchased++;
 
-  // Mark book as purchased in storage
-  // Save under Amazon ASIN
-  console.log(`Saving under Amazon ASIN: ${message.bookId}`);
   await markBookPurchased(message.bookId, message.bookTitle);
-  console.log(`✓ Saved under Amazon ASIN`);
-
-  // Also save under original BookBub ID if available
   if (message.originalBookId && message.originalBookId !== message.bookId) {
-    console.log(`Saving under BookBub ID: ${message.originalBookId}`);
     await markBookPurchased(message.originalBookId, message.bookTitle);
-    console.log(`✓ Saved under BookBub ID`);
-  } else if (!message.originalBookId) {
-    console.warn('⚠️  WARNING: originalBookId is NULL - book only saved under ASIN!');
   }
 }
 
 // Handle purchase skipped notification
 async function handlePurchaseSkipped(message) {
-  console.log(`Purchase skipped: ${message.bookTitle} - Reason: ${message.reason}`);
-  console.log(`  Amazon ASIN: ${message.bookId}`);
-  console.log(`  BookBub ID: ${message.originalBookId || 'NOT SET'}`);
+  console.log(`Skipped: ${message.bookTitle} (${message.reason})`);
   currentStats.skipped++;
 
-  // If already in library, still mark as "purchased" to avoid future attempts
   if (message.reason === 'Already in library') {
-    console.log(`Book already in library - saving to prevent future attempts`);
-
-    // Save under Amazon ASIN
-    console.log(`Saving under Amazon ASIN: ${message.bookId}`);
     await markBookPurchased(message.bookId, message.bookTitle);
-    console.log(`✓ Saved under Amazon ASIN`);
-
-    // Also save under original BookBub ID if available
     if (message.originalBookId && message.originalBookId !== message.bookId) {
-      console.log(`Saving under BookBub ID: ${message.originalBookId}`);
       await markBookPurchased(message.originalBookId, message.bookTitle);
-      console.log(`✓ Saved under BookBub ID`);
-    } else if (!message.originalBookId) {
-      console.warn('⚠️  WARNING: originalBookId is NULL - book only saved under ASIN!');
     }
   }
 }
 
 // Mark a book as purchased in storage
 async function markBookPurchased(bookId, bookTitle) {
-  console.log(`[markBookPurchased] Starting save for ID: ${bookId}, Title: ${bookTitle}`);
   return new Promise((resolve, reject) => {
     chrome.storage.local.get(['purchasedBooks'], (result) => {
       if (chrome.runtime.lastError) {
-        console.error(`[markBookPurchased] Error getting storage:`, chrome.runtime.lastError);
+        console.error('Storage error:', chrome.runtime.lastError);
         reject(chrome.runtime.lastError);
         return;
       }
 
       const purchasedBooks = result.purchasedBooks || {};
-      console.log(`[markBookPurchased] Current storage has ${Object.keys(purchasedBooks).length} books`);
-
       purchasedBooks[bookId] = {
         title: bookTitle,
         timestamp: Date.now(),
         source: 'extension'
       };
 
-      console.log(`[markBookPurchased] Attempting to save...`);
       chrome.storage.local.set({ purchasedBooks }, () => {
         if (chrome.runtime.lastError) {
-          console.error(`[markBookPurchased] Error setting storage:`, chrome.runtime.lastError);
+          console.error('Storage error:', chrome.runtime.lastError);
           reject(chrome.runtime.lastError);
           return;
         }
-        console.log(`[markBookPurchased] ✓ Successfully saved ${bookTitle} (ID: ${bookId})`);
-        console.log(`[markBookPurchased] Storage now has ${Object.keys(purchasedBooks).length} books`);
         resolve();
       });
     });

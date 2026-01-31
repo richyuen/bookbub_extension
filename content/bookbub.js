@@ -1,7 +1,5 @@
 // Content script for BookBub pages
 
-console.log('BookBub content script loaded');
-
 let currentPage = 1;
 let isProcessing = false;
 
@@ -13,8 +11,6 @@ if (document.readyState === 'loading') {
 }
 
 function init() {
-  console.log('Initializing BookBub content script');
-
   // Check if we're on a deals page
   if (window.location.pathname.includes('/ebook-deals') ||
       window.location.pathname.includes('/deals')) {
@@ -67,7 +63,6 @@ function injectButton() {
   button.addEventListener('click', handleButtonClick);
 
   document.body.appendChild(button);
-  console.log('Auto-purchase button injected');
 }
 
 // Handle button click
@@ -92,8 +87,6 @@ async function handleButtonClick() {
       return;
     }
 
-    console.log(`Found ${books.length} unpurchased books`);
-
     // Send books to background script for processing
     chrome.runtime.sendMessage({
       type: 'START_PROCESSING',
@@ -109,7 +102,6 @@ async function handleButtonClick() {
 
 // Scrape books from the current page
 async function scrapeBooks() {
-  console.log('Scraping books from page...');
   const books = [];
 
   // BookBub deal cards - try multiple selectors
@@ -124,14 +116,10 @@ async function scrapeBooks() {
   let dealElements = [];
   for (const selector of dealSelectors) {
     dealElements = document.querySelectorAll(selector);
-    if (dealElements.length > 0) {
-      console.log(`Found ${dealElements.length} deals using selector: ${selector}`);
-      break;
-    }
+    if (dealElements.length > 0) break;
   }
 
   if (dealElements.length === 0) {
-    console.warn('No deal elements found. Page structure may have changed.');
     return books;
   }
 
@@ -143,26 +131,20 @@ async function scrapeBooks() {
       const book = await extractBookData(deal);
       if (book) {
         // Check if we've already added this book in this scrape session
-        if (seenBookIds.has(book.id)) {
-          console.log(`Skipping duplicate in same scrape: ${book.title}`);
-          continue;
-        }
+        if (seenBookIds.has(book.id)) continue;
 
         // Check if already purchased in previous sessions
         const isPurchased = await isBookPurchased(book.id);
         if (!isPurchased) {
           books.push(book);
           seenBookIds.add(book.id);
-        } else {
-          console.log(`Skipping already purchased: ${book.title}`);
         }
       }
     } catch (error) {
-      console.error('Error extracting book data:', error);
+      // Skip books that fail to extract
     }
   }
 
-  console.log(`Scraped ${books.length} unique unpurchased books (from ${dealElements.length} containers)`);
   return books;
 }
 
@@ -201,7 +183,6 @@ async function extractBookData(dealElement) {
   }
 
   if (!amazonLink) {
-    console.log('No Amazon link found in deal element');
     return null;
   }
 
@@ -252,7 +233,6 @@ async function extractBookData(dealElement) {
 
   // Only include if price indicates free
   if (!priceText.includes('$0.00') && !priceText.includes('Free')) {
-    console.log(`Skipping non-free book: ${title} (${priceText})`);
     return null;
   }
 

@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(tree:*)",
+      "WebFetch(domain:www.bookbub.com)",
+      "Bash(dir /B \"C:\\\\Git\\\\bookbub_extension\\\\debug\")",
+      "Bash(node -c:*)"
     ]
   }
 }
