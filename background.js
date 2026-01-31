@@ -121,23 +121,25 @@ async function processBook(book) {
     });
 
     // Send the original book data to the Amazon tab
-    // Retry a few times to ensure it gets through
+    // Retry multiple times with longer delays to account for redirect time
     const sendBookId = async () => {
-      for (let i = 0; i < 5; i++) {
-        await delay(500);
+      // Wait for redirect to complete and page to load
+      for (let i = 0; i < 15; i++) {
+        await delay(1000); // 1 second between retries
         try {
           await chrome.tabs.sendMessage(tab.id, {
             type: 'SET_ORIGINAL_BOOK_ID',
             originalBookId: book.id,
             bookTitle: book.title
           });
-          console.log(`Sent original book ID to tab ${tab.id}`);
+          console.log(`✓ Sent original book ID to tab ${tab.id} (attempt ${i + 1})`);
           break;
         } catch (error) {
-          if (i === 4) {
-            console.warn('Failed to send original book ID after 5 attempts');
+          if (i === 14) {
+            console.error('❌ Failed to send original book ID after 15 attempts (15 seconds)');
+            console.error('   This book will only be saved under Amazon ASIN, not BookBub ID');
           }
-          // Tab might not be ready yet, retry
+          // Tab might still be redirecting or content script not loaded yet, retry
         }
       }
     };

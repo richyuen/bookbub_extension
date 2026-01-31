@@ -28,17 +28,19 @@ async function init() {
   // Wait a bit for dynamic content to load
   await delay(2000);
 
-  // Wait for original book ID from background script (up to 5 seconds)
+  // Wait for original book ID from background script (up to 10 seconds)
+  // Background may take time to send due to redirect delay
   let waitCount = 0;
-  while (!originalBookId && waitCount < 10) {
+  while (!originalBookId && waitCount < 20) {
     await delay(500);
     waitCount++;
   }
 
   if (originalBookId) {
-    console.log('Using original BookBub ID:', originalBookId);
+    console.log('✓ Received original BookBub ID:', originalBookId);
   } else {
-    console.warn('Timed out waiting for original book ID, proceeding without it');
+    console.error('❌ Timed out waiting for original book ID after 10 seconds');
+    console.error('   Book will only be saved under Amazon ASIN');
   }
 
   // Check if this is a Kindle book page
