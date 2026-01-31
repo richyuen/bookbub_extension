@@ -1,21 +1,19 @@
-PLACEHOLDER ICONS NEEDED
+ICON GENERATION - SUPER EASY METHOD
 
-To complete the extension, you need to add three icon files to this directory:
+Simply open the file "generate_icons.html" in any web browser!
 
-- icon16.png (16x16 pixels)
-- icon48.png (48x48 pixels)
-- icon128.png (128x128 pixels)
+STEPS:
+1. Double-click "generate_icons.html" (opens in your default browser)
+2. Preview the icons on the page
+3. Click "Download All Icons" button
+4. Three PNG files will download: icon16.png, icon48.png, icon128.png
+5. Move the downloaded PNG files from your Downloads folder to this icons/ folder
+6. Delete or rename generate_icons.html (no longer needed)
+7. Done! The extension now has proper icons.
 
-QUICK SOLUTION:
-You can create simple colored squares as placeholders using any image editor, or use an online tool like:
-- https://www.favicon-generator.org/
-- https://www.canva.com/
+The icons feature:
+- Green background (#4CAF50) matching the extension theme
+- White book symbol with "BB" text on the largest icon
+- Professional appearance at all sizes
 
-Recommended design:
-- Green background (#4CAF50)
-- White book icon or "BB" text
-- Simple and recognizable
-
-TEMPORARY WORKAROUND:
-The extension will still load without icons, but Edge will show a default puzzle piece icon.
-You can add proper icons later without affecting functionality.
+No image editing software needed - everything is generated automatically!
