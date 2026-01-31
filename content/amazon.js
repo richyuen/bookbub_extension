@@ -51,23 +51,25 @@ async function init() {
   // Extract book information
   const bookTitle = getBookTitle();
   const bookId = getBookId();
-  const price = getBookPrice();
 
   console.log(`Book: ${bookTitle}`);
-  console.log(`Price: ${price}`);
   console.log(`Book ID: ${bookId}`);
 
-  // Check if book is free
-  if (!isFree(price)) {
-    console.log('Book is not free, skipping');
-    notifySkipped('Not free', bookTitle, bookId);
-    return;
-  }
-
-  // Check if already in library
+  // Check if already in library FIRST (before checking price)
+  // If book is owned, Amazon doesn't show price, so check library first
   if (isInLibrary()) {
     console.log('Book is already in library');
     notifySkipped('Already in library', bookTitle, bookId);
+    return;
+  }
+
+  // Now check if book is free (only for books not already owned)
+  const price = getBookPrice();
+  console.log(`Price: ${price}`);
+
+  if (!isFree(price)) {
+    console.log('Book is not free, skipping');
+    notifySkipped('Not free', bookTitle, bookId);
     return;
   }
 
