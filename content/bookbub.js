@@ -114,6 +114,7 @@ async function scrapeBooks() {
 
   // BookBub deal cards - try multiple selectors
   const dealSelectors = [
+    '[data-testid*="book"]',  // Current BookBub structure (2026)
     '.deal-tile',
     '.daily-deal-tile',
     '[data-deal-id]',
@@ -156,18 +157,49 @@ async function scrapeBooks() {
 
 // Extract book data from a deal element
 async function extractBookData(dealElement) {
-  // Try to find the Amazon link
-  const amazonLink = dealElement.querySelector('a[href*="amazon.com"]');
+  // Try to find the Amazon link (direct or via BookBub redirect)
+  let amazonLink = dealElement.querySelector('a[href*="amazon.com"]');
+  let amazonUrl = '';
+
+  // If no direct Amazon link, try BookBub redirect links
   if (!amazonLink) {
-    console.log('No Amazon link found in deal element');
+    // Look for BookBub book links (they redirect to retailers)
+    const bookbubLink = dealElement.querySelector('a[href*="/books/"]') ||
+                        dealElement.querySelector('a[href*="bookbub.com"]');
+
+    if (bookbubLink) {
+      // Try to get Amazon URL from data attributes
+      amazonUrl = bookbubLink.getAttribute('data-url') ||
+                  bookbubLink.getAttribute('data-amazon-url') ||
+                  bookbubLink.getAttribute('data-href');
+
+      // If still no Amazon URL, use the BookBub link (will redirect)
+      if (!amazonUrl) {
+        amazonUrl = bookbubLink.href;
+      }
+
+      amazonLink = bookbubLink;
+    }
+  } else {
+    amazonUrl = amazonLink.href;
+  }
+
+  if (!amazonLink || !amazonUrl) {
+    console.log('No Amazon or BookBub link found in deal element');
     return null;
   }
 
-  const amazonUrl = amazonLink.href;
+  // Log whether we're using direct Amazon link or redirect
+  if (amazonUrl.includes('amazon.com')) {
+    console.log('Found direct Amazon link');
+  } else {
+    console.log('Using BookBub redirect link:', amazonUrl);
+  }
 
   // Extract book title - try multiple approaches
   let title = '';
   const titleSelectors = [
+    '[class*="title"]',  // Current BookBub structure (2026)
     '.book-title',
     '.deal-title',
     'h3',
