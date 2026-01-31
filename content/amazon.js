@@ -156,6 +156,8 @@ function getBookId() {
 
 // Get book price
 function getBookPrice() {
+  console.log('[getBookPrice] Searching for price...');
+
   const priceSelectors = [
     '.a-price .a-offscreen',
     '#kindle-price',
@@ -168,7 +170,9 @@ function getBookPrice() {
     const element = document.querySelector(selector);
     if (element) {
       const priceText = element.textContent.trim();
+      console.log(`[getBookPrice] Found element with selector "${selector}": "${priceText}"`);
       if (priceText.includes('$')) {
+        console.log(`[getBookPrice] Returning: "${priceText}"`);
         return priceText;
       }
     }
@@ -177,9 +181,11 @@ function getBookPrice() {
   // Check for "Free" text
   const bodyText = document.body.textContent;
   if (bodyText.includes('$0.00')) {
+    console.log('[getBookPrice] Found $0.00 in body text');
     return '$0.00';
   }
 
+  console.log('[getBookPrice] No price found, returning "Unknown"');
   return 'Unknown';
 }
 
@@ -195,32 +201,50 @@ function isFree(price) {
 
 // Check if book is already in library
 function isInLibrary() {
+  console.log('[isInLibrary] Checking if book is already owned...');
+
   // Look for indicators that book is already owned
   const ownedIndicators = [
     'Read for Free',
+    'Read for free',
     'Already purchased',
     'Read now',
+    'Read Now',
     'You own this book',
-    'In your library'
+    'In your library',
+    'Purchased',
+    'Owned'
   ];
 
   const bodyText = document.body.textContent;
 
   for (const indicator of ownedIndicators) {
     if (bodyText.includes(indicator)) {
+      console.log(`[isInLibrary] ✓ Found indicator: "${indicator}"`);
       return true;
     }
   }
 
   // Check for specific button text
-  const buttons = document.querySelectorAll('button, a.a-button, input[type="submit"]');
+  const buttons = document.querySelectorAll('button, a.a-button, input[type="submit"], span[role="button"]');
+  console.log(`[isInLibrary] Checking ${buttons.length} buttons for ownership indicators...`);
+
   for (const button of buttons) {
     const buttonText = button.textContent.trim();
     if (buttonText.includes('Read for Free') ||
+        buttonText.includes('Read for free') ||
         buttonText.includes('Read now') ||
+        buttonText.includes('Read Now') ||
         buttonText.includes('Already purchased')) {
+      console.log(`[isInLibrary] ✓ Found button with text: "${buttonText}"`);
       return true;
     }
+  }
+
+  console.log('[isInLibrary] ✗ No ownership indicators found');
+  console.log('[isInLibrary] Sample buttons on page:');
+  for (let i = 0; i < Math.min(5, buttons.length); i++) {
+    console.log(`  Button ${i + 1}: "${buttons[i].textContent.trim().substring(0, 50)}"`);
   }
 
   return false;
