@@ -2,6 +2,7 @@
 
 let currentPage = 1;
 let isProcessing = false;
+let autoNextPageEnabled = false; // Can be toggled via button
 
 // Initialize when page loads
 if (document.readyState === 'loading') {
@@ -34,7 +35,7 @@ function injectButton() {
 
   const button = document.createElement('button');
   button.id = 'bookbub-auto-purchase-btn';
-  button.textContent = 'Start Auto-Purchase';
+  updateButtonText(button);
   button.style.cssText = `
     position: fixed;
     bottom: 20px;
@@ -62,7 +63,26 @@ function injectButton() {
 
   button.addEventListener('click', handleButtonClick);
 
+  // Right-click to toggle auto-pagination
+  button.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    autoNextPageEnabled = !autoNextPageEnabled;
+    updateButtonText(button);
+    alert(`Auto-pagination ${autoNextPageEnabled ? 'ENABLED' : 'DISABLED'}\n\n` +
+          `${autoNextPageEnabled ? 'Will automatically move to next page if unpurchased books found.' : 'Will stop after current page.'}`);
+  });
+
   document.body.appendChild(button);
+}
+
+// Update button text based on auto-pagination state
+function updateButtonText(button) {
+  button.textContent = autoNextPageEnabled
+    ? 'Start Auto-Purchase (Auto-Page ON)'
+    : 'Start Auto-Purchase';
+  button.title = autoNextPageEnabled
+    ? 'Left-click: Start processing\nRight-click: Disable auto-pagination'
+    : 'Left-click: Start processing\nRight-click: Enable auto-pagination';
 }
 
 // Handle button click
@@ -290,36 +310,51 @@ async function isBookPurchased(bookId) {
 
 // Handle processing complete message
 function handleProcessingComplete(stats) {
-  console.log('Processing complete:', stats);
   isProcessing = false;
 
-  const message = `Processing complete!\n\n` +
-                  `Processed: ${stats.processed}\n` +
-                  `Purchased: ${stats.purchased}\n` +
-                  `Skipped: ${stats.skipped}`;
-
-  alert(message);
-
   // Check if we should go to next page
-  if (stats.processed > 0 && shouldGoToNextPage()) {
+  if (autoNextPageEnabled && stats.processed > 0 && shouldGoToNextPage(stats)) {
+    // Found unpurchased books, continue to next page
+    const message = `Page ${currentPage} complete!\n\n` +
+                    `Processed: ${stats.processed}\n` +
+                    `Purchased: ${stats.purchased}\n` +
+                    `Skipped: ${stats.skipped}\n\n` +
+                    `Moving to next page...`;
+    alert(message);
     goToNextPage();
   } else {
+    // All done
+    const message = `Processing complete!\n\n` +
+                    `Processed: ${stats.processed}\n` +
+                    `Purchased: ${stats.purchased}\n` +
+                    `Skipped: ${stats.skipped}\n\n` +
+                    `${autoNextPageEnabled && stats.processed === 0 ? 'No more unpurchased books found.' : 'Done!'}`;
+    alert(message);
     resetButton();
   }
 }
 
 // Determine if we should navigate to next page
-function shouldGoToNextPage() {
-  // For now, we'll let the user manually navigate
-  // In future, could check if there's a "Next" button available
-  return false;
+function shouldGoToNextPage(stats) {
+  if (!autoNextPageEnabled) return false;
+
+  // If we processed any books on this page, there might be more on the next page
+  // Continue until we find a page with 0 processed books
+  return stats.processed > 0;
 }
 
 // Navigate to next page
 function goToNextPage() {
-  currentPage++;
   const url = new URL(window.location.href);
-  url.searchParams.set('page', currentPage);
+
+  // Get current page number from URL or default to 1
+  const urlPage = parseInt(url.searchParams.get('page') || '1');
+  const nextPage = urlPage + 1;
+
+  // Set new page number
+  url.searchParams.set('page', nextPage);
+
+  // Navigate to next page
   window.location.href = url.toString();
 }
 
