@@ -28,6 +28,19 @@ async function init() {
   // Wait a bit for dynamic content to load
   await delay(2000);
 
+  // Wait for original book ID from background script (up to 5 seconds)
+  let waitCount = 0;
+  while (!originalBookId && waitCount < 10) {
+    await delay(500);
+    waitCount++;
+  }
+
+  if (originalBookId) {
+    console.log('Using original BookBub ID:', originalBookId);
+  } else {
+    console.warn('Timed out waiting for original book ID, proceeding without it');
+  }
+
   // Check if this is a Kindle book page
   if (!isKindleBookPage()) {
     console.log('Not a Kindle book page');

@@ -102,26 +102,34 @@ async function processBook(book) {
   currentStats.processed++;
 
   try {
-    // Store the original book ID for later mapping
-    const processingKey = Date.now() + '_' + Math.random();
-    bookIdMapping.set(processingKey, book.id);
-
     // Open Amazon page in new tab
     const tab = await chrome.tabs.create({
       url: book.amazonUrl,
       active: false
     });
 
-    // Send the original book data to the Amazon tab (after it loads)
-    setTimeout(() => {
-      chrome.tabs.sendMessage(tab.id, {
-        type: 'SET_ORIGINAL_BOOK_ID',
-        originalBookId: book.id,
-        bookTitle: book.title
-      }).catch(() => {
-        // Tab might not be ready yet, that's okay
-      });
-    }, 3000);
+    // Send the original book data to the Amazon tab
+    // Retry a few times to ensure it gets through
+    const sendBookId = async () => {
+      for (let i = 0; i < 5; i++) {
+        await delay(500);
+        try {
+          await chrome.tabs.sendMessage(tab.id, {
+            type: 'SET_ORIGINAL_BOOK_ID',
+            originalBookId: book.id,
+            bookTitle: book.title
+          });
+          console.log(`Sent original book ID to tab ${tab.id}`);
+          break;
+        } catch (error) {
+          if (i === 4) {
+            console.warn('Failed to send original book ID after 5 attempts');
+          }
+          // Tab might not be ready yet, retry
+        }
+      }
+    };
+    sendBookId(); // Don't await, let it run in background
 
     // Wait for the tab to load and content script to process
     await waitForTabProcessing(tab.id);
