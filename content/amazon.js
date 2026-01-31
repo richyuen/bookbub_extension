@@ -2,6 +2,19 @@
 
 console.log('Amazon content script loaded');
 
+// Store original book ID from BookBub (will be sent by background script)
+let originalBookId = null;
+let originalBookTitle = null;
+
+// Listen for messages from background script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'SET_ORIGINAL_BOOK_ID') {
+    originalBookId = message.originalBookId;
+    originalBookTitle = message.bookTitle;
+    console.log('Received original book ID:', originalBookId);
+  }
+});
+
 // Wait for page to be fully loaded
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
@@ -260,7 +273,8 @@ function notifyPurchaseComplete(bookTitle, bookId) {
   chrome.runtime.sendMessage({
     type: 'PURCHASE_COMPLETE',
     bookTitle: bookTitle,
-    bookId: bookId
+    bookId: bookId,  // Amazon ASIN
+    originalBookId: originalBookId  // BookBub promotion ID (if available)
   });
 }
 
@@ -270,7 +284,8 @@ function notifySkipped(reason, bookTitle = 'Unknown', bookId = 'unknown') {
     type: 'PURCHASE_SKIPPED',
     reason: reason,
     bookTitle: bookTitle,
-    bookId: bookId
+    bookId: bookId,  // Amazon ASIN
+    originalBookId: originalBookId  // BookBub promotion ID (if available)
   });
 }
 

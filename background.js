@@ -84,6 +84,9 @@ async function handleStartProcessing(books, bookbubTabId) {
   });
 }
 
+// Track original book IDs for mapping BookBub IDs to Amazon ASINs
+const bookIdMapping = new Map();
+
 // Process a single book
 async function processBook(book) {
   console.log(`Processing book: ${book.title} (ID: ${book.id})`);
@@ -99,11 +102,26 @@ async function processBook(book) {
   currentStats.processed++;
 
   try {
+    // Store the original book ID for later mapping
+    const processingKey = Date.now() + '_' + Math.random();
+    bookIdMapping.set(processingKey, book.id);
+
     // Open Amazon page in new tab
     const tab = await chrome.tabs.create({
       url: book.amazonUrl,
       active: false
     });
+
+    // Send the original book data to the Amazon tab (after it loads)
+    setTimeout(() => {
+      chrome.tabs.sendMessage(tab.id, {
+        type: 'SET_ORIGINAL_BOOK_ID',
+        originalBookId: book.id,
+        bookTitle: book.title
+      }).catch(() => {
+        // Tab might not be ready yet, that's okay
+      });
+    }, 3000);
 
     // Wait for the tab to load and content script to process
     await waitForTabProcessing(tab.id);
@@ -172,17 +190,31 @@ async function handlePurchaseComplete(message) {
   currentStats.purchased++;
 
   // Mark book as purchased in storage
+  // Save under Amazon ASIN
   await markBookPurchased(message.bookId, message.bookTitle);
+
+  // Also save under original BookBub ID if available
+  if (message.originalBookId && message.originalBookId !== message.bookId) {
+    console.log(`Mapping BookBub ID ${message.originalBookId} → Amazon ASIN ${message.bookId}`);
+    await markBookPurchased(message.originalBookId, message.bookTitle);
+  }
 }
 
 // Handle purchase skipped notification
-function handlePurchaseSkipped(message) {
+async function handlePurchaseSkipped(message) {
   console.log(`Purchase skipped: ${message.bookTitle} - Reason: ${message.reason}`);
   currentStats.skipped++;
 
   // If already in library, still mark as "purchased" to avoid future attempts
   if (message.reason === 'Already in library') {
-    markBookPurchased(message.bookId, message.bookTitle);
+    // Save under Amazon ASIN
+    await markBookPurchased(message.bookId, message.bookTitle);
+
+    // Also save under original BookBub ID if available
+    if (message.originalBookId && message.originalBookId !== message.bookId) {
+      console.log(`Mapping BookBub ID ${message.originalBookId} → Amazon ASIN ${message.bookId} (already in library)`);
+      await markBookPurchased(message.originalBookId, message.bookTitle);
+    }
   }
 }
 
