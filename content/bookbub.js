@@ -46,14 +46,22 @@ function injectButton() {
     return;
   }
 
-  const button = document.createElement('button');
-  button.id = 'bookbub-auto-purchase-btn';
-  updateButtonText(button);
-  button.style.cssText = `
+  const container = document.createElement('div');
+  container.style.cssText = `
     position: fixed;
     bottom: 20px;
     right: 20px;
     z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+  `;
+
+  const button = document.createElement('button');
+  button.id = 'bookbub-auto-purchase-btn';
+  updateButtonText(button);
+  button.style.cssText = `
     padding: 15px 25px;
     background: #4CAF50;
     color: white;
@@ -76,7 +84,32 @@ function injectButton() {
 
   button.addEventListener('click', handleButtonClick);
 
-  document.body.appendChild(button);
+  // Add Reset Button
+  const resetButton = document.createElement('button');
+  resetButton.textContent = 'Reset History';
+  resetButton.style.cssText = `
+    padding: 8px 12px;
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    opacity: 0.8;
+  `;
+
+  resetButton.addEventListener('click', () => {
+    if (confirm('Are you sure you want to clear the history of checked books? This will make the extension check all books again.')) {
+      chrome.runtime.sendMessage({ type: 'CLEAR_HISTORY' }, () => {
+        alert('History cleared.');
+      });
+    }
+  });
+
+  container.appendChild(button);
+  container.appendChild(resetButton);
+  document.body.appendChild(container);
 }
 
 // Load auto-pagination setting from storage
@@ -150,6 +183,7 @@ async function handleButtonClick() {
 // Scrape books from the current page
 async function scrapeBooks() {
   const books = [];
+  console.log('Scraping books...');
 
   // BookBub deal cards - try multiple selectors
   const dealSelectors = [
@@ -163,10 +197,14 @@ async function scrapeBooks() {
   let dealElements = [];
   for (const selector of dealSelectors) {
     dealElements = document.querySelectorAll(selector);
-    if (dealElements.length > 0) break;
+    if (dealElements.length > 0) {
+      console.log(`Found ${dealElements.length} elements using selector: ${selector}`);
+      break;
+    }
   }
 
   if (dealElements.length === 0) {
+    console.log('No deal elements found with any selector');
     return books;
   }
 
@@ -178,20 +216,29 @@ async function scrapeBooks() {
       const book = await extractBookData(deal);
       if (book) {
         // Check if we've already added this book in this scrape session
-        if (seenBookIds.has(book.id)) continue;
+        if (seenBookIds.has(book.id)) {
+          console.log(`Skipping duplicate in current page: ${book.title}`);
+          continue;
+        }
 
         // Check if already purchased in previous sessions
         const isPurchased = await isBookPurchased(book.id);
         if (!isPurchased) {
+          console.log(`Adding to queue: ${book.title} (${book.id})`);
           books.push(book);
           seenBookIds.add(book.id);
+        } else {
+          console.log(`Skipping already purchased/checked: ${book.title} (${book.id})`);
         }
+      } else {
+        // extractBookData logs why it returned null
       }
     } catch (error) {
-      // Skip books that fail to extract
+      console.error('Error processing deal element:', error);
     }
   }
 
+  console.log(`Scrape complete. Found ${books.length} unpurchased books.`);
   return books;
 }
 
@@ -230,17 +277,11 @@ async function extractBookData(dealElement) {
   }
 
   if (!amazonLink) {
+    // console.log('No Amazon link found for this deal'); // Too noisy
     return null;
   }
 
   amazonUrl = amazonLink.href;
-
-  // Log whether we're using direct Amazon link or redirect
-  if (amazonUrl.includes('amazon.com')) {
-    console.log('Found direct Amazon link');
-  } else {
-    console.log('Using BookBub redirect link:', amazonUrl);
-  }
 
   // Extract book title - try multiple approaches
   let title = '';
@@ -280,6 +321,7 @@ async function extractBookData(dealElement) {
 
   // Only include if price indicates free
   if (!priceText.includes('$0.00') && !priceText.includes('Free')) {
+    console.log(`Skipping non-free book: ${title}. Price text: "${priceText}"`);
     return null;
   }
 

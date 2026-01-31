@@ -25,11 +25,19 @@ async function init() {
   // Wait for page to load
   await delay(1000);
 
-  // Wait for original book ID from background script
-  let waitCount = 0;
-  while (!originalBookId && waitCount < 10) {
-    await delay(500);
-    waitCount++;
+  // Request original book ID from background script
+  try {
+    const response = await chrome.runtime.sendMessage({ type: 'REQUEST_BOOK_ID' });
+    if (response && !response.error) {
+      originalBookId = response.originalBookId;
+      originalBookTitle = response.bookTitle;
+      isLastBook = response.isLastBook;
+      console.log('Received book info:', originalBookTitle, originalBookId);
+    } else {
+      console.log('No book info received from background script');
+    }
+  } catch (error) {
+    console.error('Error requesting book ID:', error);
   }
 
   // Check if this is a Kindle book page

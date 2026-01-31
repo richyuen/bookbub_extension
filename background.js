@@ -3,6 +3,7 @@
 let processingQueue = [];
 let isProcessing = false;
 let shouldStopProcessing = false;
+let currentProcessingBook = null;
 let currentStats = {
   processed: 0,
   purchased: 0,
@@ -35,6 +36,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'START_PROCESSING') {
     handleStartProcessing(message.books, sender.tab.id);
     sendResponse({ success: true });
+  } else if (message.type === 'REQUEST_BOOK_ID') {
+    if (currentProcessingBook) {
+      sendResponse({
+        originalBookId: currentProcessingBook.id,
+        bookTitle: currentProcessingBook.title,
+        isLastBook: currentProcessingBook.isLastBook || false
+      });
+    } else {
+      sendResponse({ error: 'No book currently processing' });
+    }
   } else if (message.type === 'PURCHASE_COMPLETE') {
     // Handle async operation properly
     handlePurchaseComplete(message).then(() => {
@@ -58,6 +69,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.type === 'RESET_STATS') {
     currentStats = { processed: 0, purchased: 0, skipped: 0, lastBookPurchased: false };
     sendResponse({ success: true });
+  } else if (message.type === 'CLEAR_HISTORY') {
+    currentStats = { processed: 0, purchased: 0, skipped: 0, lastBookPurchased: false };
+    chrome.storage.local.set({ purchasedBooks: {} }, () => {
+      console.log('History cleared by user');
+      sendResponse({ success: true });
+    });
+    return true; // Async response
   } else if (message.type === 'CHECK_IF_PURCHASED') {
     checkIfPurchased(message.bookId, sendResponse);
     return true; // Keep channel open for async response
@@ -126,6 +144,7 @@ async function processBook(book) {
   }
 
   currentStats.processed++;
+  currentProcessingBook = book;
 
   try {
     // Open Amazon page in new tab
@@ -133,25 +152,6 @@ async function processBook(book) {
       url: book.amazonUrl,
       active: false
     });
-
-    // Send the original book data to the Amazon tab
-    const sendBookId = async () => {
-      for (let i = 0; i < 12; i++) {
-        await delay(500);
-        try {
-          await chrome.tabs.sendMessage(tab.id, {
-            type: 'SET_ORIGINAL_BOOK_ID',
-            originalBookId: book.id,
-            bookTitle: book.title,
-            isLastBook: book.isLastBook || false
-          });
-          break;
-        } catch (error) {
-          // Tab still redirecting, retry
-        }
-      }
-    };
-    sendBookId();
 
     // Wait for the tab to load and content script to process
     await waitForTabProcessing(tab.id);
@@ -162,6 +162,8 @@ async function processBook(book) {
   } catch (error) {
     console.error(`Error processing book ${book.title}:`, error);
     currentStats.skipped++;
+  } finally {
+    currentProcessingBook = null;
   }
 }
 
@@ -235,11 +237,11 @@ async function handlePurchaseSkipped(message) {
   console.log(`Skipped: ${message.bookTitle} (${message.reason})`);
   currentStats.skipped++;
 
-  if (message.reason === 'Already in library') {
-    await markBookPurchased(message.bookId, message.bookTitle);
-    if (message.originalBookId && message.originalBookId !== message.bookId) {
-      await markBookPurchased(message.originalBookId, message.bookTitle);
-    }
+  // Always mark as purchased/processed so we don't check it again
+  // (per user requirement: "store the books that it has already checked in storage and then not check these at all again")
+  await markBookPurchased(message.bookId, message.bookTitle);
+  if (message.originalBookId && message.originalBookId !== message.bookId) {
+    await markBookPurchased(message.originalBookId, message.bookTitle);
   }
 }
 
