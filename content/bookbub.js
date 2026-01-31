@@ -135,14 +135,24 @@ async function scrapeBooks() {
     return books;
   }
 
+  // Track book IDs to avoid duplicates in the same scrape
+  const seenBookIds = new Set();
+
   for (const deal of dealElements) {
     try {
       const book = await extractBookData(deal);
       if (book) {
-        // Check if already purchased
+        // Check if we've already added this book in this scrape session
+        if (seenBookIds.has(book.id)) {
+          console.log(`Skipping duplicate in same scrape: ${book.title}`);
+          continue;
+        }
+
+        // Check if already purchased in previous sessions
         const isPurchased = await isBookPurchased(book.id);
         if (!isPurchased) {
           books.push(book);
+          seenBookIds.add(book.id);
         } else {
           console.log(`Skipping already purchased: ${book.title}`);
         }
@@ -152,6 +162,7 @@ async function scrapeBooks() {
     }
   }
 
+  console.log(`Scraped ${books.length} unique unpurchased books (from ${dealElements.length} containers)`);
   return books;
 }
 
@@ -254,7 +265,7 @@ async function extractBookData(dealElement) {
 
 // Generate a unique book ID from Amazon URL
 function generateBookId(amazonUrl) {
-  // Extract ASIN from Amazon URL
+  // Extract ASIN from direct Amazon URL
   const asinMatch = amazonUrl.match(/\/dp\/([A-Z0-9]{10})/i) ||
                     amazonUrl.match(/\/gp\/product\/([A-Z0-9]{10})/i);
 
@@ -262,8 +273,16 @@ function generateBookId(amazonUrl) {
     return asinMatch[1];
   }
 
-  // Fallback: use hash of URL
-  return hashString(amazonUrl);
+  // Extract promotion ID from BookBub redirect URL
+  // Pattern: https://r.bookbub.com/promotion_site_active_check/177380?...
+  const promotionMatch = amazonUrl.match(/promotion_site_active_check\/(\d+)/);
+  if (promotionMatch) {
+    return 'bb_' + promotionMatch[1];
+  }
+
+  // Fallback: use hash of URL (remove query params for consistency)
+  const urlWithoutParams = amazonUrl.split('?')[0];
+  return 'hash_' + hashString(urlWithoutParams);
 }
 
 // Simple string hash function

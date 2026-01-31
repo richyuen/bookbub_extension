@@ -86,7 +86,16 @@ async function handleStartProcessing(books, bookbubTabId) {
 
 // Process a single book
 async function processBook(book) {
-  console.log(`Processing book: ${book.title}`);
+  console.log(`Processing book: ${book.title} (ID: ${book.id})`);
+
+  // Double-check if book was purchased since we scraped
+  const alreadyPurchased = await checkIfBookPurchased(book.id);
+  if (alreadyPurchased) {
+    console.log(`Skipping ${book.title} - already purchased`);
+    currentStats.skipped++;
+    return;
+  }
+
   currentStats.processed++;
 
   try {
@@ -106,6 +115,16 @@ async function processBook(book) {
     console.error(`Error processing book ${book.title}:`, error);
     currentStats.skipped++;
   }
+}
+
+// Check if a book has been purchased (returns a promise)
+function checkIfBookPurchased(bookId) {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['purchasedBooks'], (result) => {
+      const purchasedBooks = result.purchasedBooks || {};
+      resolve(bookId in purchasedBooks);
+    });
+  });
 }
 
 // Wait for Amazon content script to complete processing
