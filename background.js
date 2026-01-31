@@ -34,11 +34,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     handleStartProcessing(message.books, sender.tab.id);
     sendResponse({ success: true });
   } else if (message.type === 'PURCHASE_COMPLETE') {
-    handlePurchaseComplete(message);
-    sendResponse({ success: true });
+    // Handle async operation properly
+    handlePurchaseComplete(message).then(() => {
+      sendResponse({ success: true });
+    }).catch((error) => {
+      console.error('Error in handlePurchaseComplete:', error);
+      sendResponse({ success: false, error: error.message });
+    });
+    return true; // Keep channel open for async response
   } else if (message.type === 'PURCHASE_SKIPPED') {
-    handlePurchaseSkipped(message);
-    sendResponse({ success: true });
+    // Handle async operation properly
+    handlePurchaseSkipped(message).then(() => {
+      sendResponse({ success: true });
+    }).catch((error) => {
+      console.error('Error in handlePurchaseSkipped:', error);
+      sendResponse({ success: false, error: error.message });
+    });
+    return true; // Keep channel open for async response
   } else if (message.type === 'GET_STATS') {
     sendResponse({ stats: currentStats });
   } else if (message.type === 'RESET_STATS') {
