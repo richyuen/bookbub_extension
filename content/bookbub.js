@@ -158,36 +158,43 @@ async function scrapeBooks() {
 // Extract book data from a deal element
 async function extractBookData(dealElement) {
   // Try to find the Amazon link (direct or via BookBub redirect)
-  let amazonLink = dealElement.querySelector('a[href*="amazon.com"]');
+  let amazonLink = null;
   let amazonUrl = '';
 
-  // If no direct Amazon link, try BookBub redirect links
+  // First, try direct Amazon links
+  amazonLink = dealElement.querySelector('a[href*="amazon.com"]');
+
   if (!amazonLink) {
-    // Look for BookBub book links (they redirect to retailers)
-    const bookbubLink = dealElement.querySelector('a[href*="/books/"]') ||
-                        dealElement.querySelector('a[href*="bookbub.com"]');
+    // Look for the Amazon retailer button (BookBub's new structure)
+    // These are buttons/links with text "Amazon" and class "bub-button"
+    const allLinks = dealElement.querySelectorAll('a');
+    for (const link of allLinks) {
+      const text = link.textContent.trim();
+      const href = link.href;
 
-    if (bookbubLink) {
-      // Try to get Amazon URL from data attributes
-      amazonUrl = bookbubLink.getAttribute('data-url') ||
-                  bookbubLink.getAttribute('data-amazon-url') ||
-                  bookbubLink.getAttribute('data-href');
-
-      // If still no Amazon URL, use the BookBub link (will redirect)
-      if (!amazonUrl) {
-        amazonUrl = bookbubLink.href;
+      // Look for Amazon button by text content
+      if (text === 'Amazon' || text.toLowerCase().includes('amazon')) {
+        amazonLink = link;
+        break;
       }
 
-      amazonLink = bookbubLink;
+      // Or look for BookBub redirect links to Amazon
+      if (href.includes('r.bookbub.com') || href.includes('promotion_site_active_check')) {
+        // Check if this is the Amazon retailer (retailer_id=1 is Amazon)
+        if (href.includes('retailer_id=1')) {
+          amazonLink = link;
+          break;
+        }
+      }
     }
-  } else {
-    amazonUrl = amazonLink.href;
   }
 
-  if (!amazonLink || !amazonUrl) {
-    console.log('No Amazon or BookBub link found in deal element');
+  if (!amazonLink) {
+    console.log('No Amazon link found in deal element');
     return null;
   }
+
+  amazonUrl = amazonLink.href;
 
   // Log whether we're using direct Amazon link or redirect
   if (amazonUrl.includes('amazon.com')) {
