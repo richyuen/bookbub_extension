@@ -142,15 +142,13 @@ function getBookId() {
 
 // Get book price
 function getBookPrice() {
-  const priceSelectors = [
-    '.a-price .a-offscreen',
+  // 1. Try specific Kindle price selectors first (most reliable)
+  const specificSelectors = [
     '#kindle-price',
-    '#price',
-    '.a-color-price',
-    '[data-a-color="price"]'
+    '#price'
   ];
 
-  for (const selector of priceSelectors) {
+  for (const selector of specificSelectors) {
     const element = document.querySelector(selector);
     if (element) {
       const priceText = element.textContent.trim();
@@ -160,9 +158,30 @@ function getBookPrice() {
     }
   }
 
-  // Check for "Free" text
-  if (document.body.textContent.includes('$0.00')) {
-    return '$0.00';
+  // 2. Try generic price selectors, but ONLY within the buy box area.
+  // Unscoped selectors like '.a-price .a-offscreen' match KU's $0.00 price
+  // before the actual Kindle purchase price, causing false "free" detection.
+  const buyBox = document.querySelector('#buybox') ||
+                 document.querySelector('#buybox_feature_div') ||
+                 document.querySelector('#tmmSwatches') ||
+                 document.querySelector('#formats');
+
+  if (buyBox) {
+    const genericSelectors = [
+      '.a-price .a-offscreen',
+      '.a-color-price',
+      '[data-a-color="price"]'
+    ];
+
+    for (const selector of genericSelectors) {
+      const element = buyBox.querySelector(selector);
+      if (element) {
+        const priceText = element.textContent.trim();
+        if (priceText.includes('$')) {
+          return priceText;
+        }
+      }
+    }
   }
 
   return 'Unknown';
