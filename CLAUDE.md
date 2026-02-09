@@ -58,7 +58,8 @@ debug/                     # Diagnostic/debugging utilities (not part of extensi
 Both content scripts use multiple fallback selectors to be resilient to page changes:
 - BookBub deals: `[data-testid*="book"]`, `.deal-tile`, `.daily-deal-tile`, `[data-deal-id]`
 - Amazon 1-Click: `#one-click-button`, `#buyOneClick`, `input[name="submit.buy-now"]`
-- Prices: `.a-price .a-offscreen`, `#kindle-price`, `[class*="price"]`
+- Prices (specific, unscoped): `#kindle-price`, `#price`
+- Prices (generic, scoped to buy box): `.a-price .a-offscreen`, `.a-color-price`, `[data-a-color="price"]`
 
 ## Development Workflow
 

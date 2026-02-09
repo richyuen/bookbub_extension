@@ -157,7 +157,7 @@ User Click → Scrape Page → Filter Purchased → Send to Background → Wait 
 2. **Data Extraction**
    - Gets book title from product page
    - Extracts ASIN from URL
-   - Reads price from page elements
+   - Reads price from buy box elements (scoped to avoid KU false positives)
 
 3. **Purchase Decision Logic**
    ```
@@ -185,7 +185,9 @@ User Click → Scrape Page → Filter Purchased → Send to Background → Wait 
 - Search page text for "Kindle" keywords
 
 *Price Detection:*
-- Try selectors: `.a-price .a-offscreen`, `#kindle-price`, etc.
+- First try specific selectors: `#kindle-price`, `#price`
+- Then try generic selectors (`.a-price .a-offscreen`, `.a-color-price`) scoped to buy box only
+- Generic selectors are scoped to `#buybox` / `#buybox_feature_div` to avoid matching Kindle Unlimited's $0.00 price
 - Validate text contains "$0.00" or "Free"
 
 *Library Detection:*
