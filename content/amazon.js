@@ -77,7 +77,9 @@ async function init() {
 function isKindleBookPage() {
   // Check URL
   const url = window.location.href;
-  if (!url.includes('/dp/') && !url.includes('/gp/product/')) {
+  if (!url.includes('/dp/') &&
+      !url.includes('/gp/product/') &&
+      !url.includes('/gp/aw/d/')) {
     return false;
   }
 
@@ -124,7 +126,8 @@ function getBookId() {
   // Try to get from URL
   const url = window.location.href;
   const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})/i) ||
-                    url.match(/\/gp\/product\/([A-Z0-9]{10})/i);
+                    url.match(/\/gp\/product\/([A-Z0-9]{10})/i) ||
+                    url.match(/\/gp\/aw\/d\/([A-Z0-9]{10})/i);
 
   if (asinMatch) {
     return asinMatch[1];
@@ -142,8 +145,10 @@ function getBookId() {
 
 // Get book price
 function getBookPrice() {
-  // 1. Try specific Kindle price selectors first (most reliable)
+  // 1. Try dedicated Kindle/Apex price selectors first (current Amazon layout)
   const specificSelectors = [
+    '#KindleALCLegacy_feature_div .apex-pricetopay-accessibility-label',
+    '#KindleALCLegacy_feature_div .apex-pricetopay-value .a-offscreen',
     '#kindle-price',
     '#price'
   ];
@@ -158,16 +163,19 @@ function getBookPrice() {
     }
   }
 
-  // 2. Try generic price selectors, but ONLY within the buy box area.
-  // Unscoped selectors like '.a-price .a-offscreen' match KU's $0.00 price
-  // before the actual Kindle purchase price, causing false "free" detection.
-  const buyBox = document.querySelector('#buybox') ||
+  // 2. Try generic price selectors, but ONLY within purchase-related containers.
+  // Unscoped selectors like '.a-price .a-offscreen' can match unrelated prices.
+  const buyBox = document.querySelector('#KindleALCLegacy_feature_div') ||
+                 document.querySelector('#buyOneClick') ||
+                 document.querySelector('#buybox') ||
                  document.querySelector('#buybox_feature_div') ||
                  document.querySelector('#tmmSwatches') ||
                  document.querySelector('#formats');
 
   if (buyBox) {
     const genericSelectors = [
+      '.apex-pricetopay-accessibility-label',
+      '.apex-pricetopay-value .a-offscreen',
       '.a-price .a-offscreen',
       '.a-color-price',
       '[data-a-color="price"]'
@@ -181,6 +189,16 @@ function getBookPrice() {
           return priceText;
         }
       }
+    }
+  }
+
+  // 3. Final fallback: if the one-click purchase area clearly shows $0.00, use it.
+  const oneClickContainer = document.querySelector('#KindleALCLegacy_feature_div') ||
+                            document.querySelector('#buyOneClick');
+  if (oneClickContainer) {
+    const containerText = oneClickContainer.textContent;
+    if (containerText && containerText.includes('$0.00')) {
+      return '$0.00';
     }
   }
 

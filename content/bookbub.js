@@ -336,7 +336,8 @@ async function extractBookData(dealElement) {
 function generateBookId(amazonUrl) {
   // Extract ASIN from direct Amazon URL
   const asinMatch = amazonUrl.match(/\/dp\/([A-Z0-9]{10})/i) ||
-                    amazonUrl.match(/\/gp\/product\/([A-Z0-9]{10})/i);
+                    amazonUrl.match(/\/gp\/product\/([A-Z0-9]{10})/i) ||
+                    amazonUrl.match(/\/gp\/aw\/d\/([A-Z0-9]{10})/i);
 
   if (asinMatch) {
     return asinMatch[1];

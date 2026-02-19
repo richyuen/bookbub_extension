@@ -10,7 +10,8 @@
   ],
   "host_permissions": [
     "*://www.bookbub.com/*",
-    "*://www.amazon.com/*"
+    "*://amazon.com/*",
+    "*://*.amazon.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -22,7 +23,10 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["*://www.amazon.com/*"],
+      "matches": [
+        "*://amazon.com/*",
+        "*://*.amazon.com/*"
+      ],
       "js": ["content/amazon.js"],
       "run_at": "document_idle"
     }
