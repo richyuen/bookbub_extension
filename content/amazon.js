@@ -143,62 +143,114 @@ function getBookId() {
   return 'amazon_' + hashString(url);
 }
 
+// Extract a normalized dollar amount from text (e.g. "$0.00 with savings" => "$0.00")
+function extractPriceAmount(text) {
+  if (!text) return null;
+
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  const amountMatch = normalized.match(/\$[0-9]+(?:\.[0-9]{1,2})?/);
+  return amountMatch ? amountMatch[0] : null;
+}
+
 // Get book price
 function getBookPrice() {
-  // 1. Try dedicated Kindle/Apex price selectors first (current Amazon layout)
-  const specificSelectors = [
+  // 1. Prefer Kindle format matrix price (avoids audiobook add-on prices)
+  const kindleFormatSelectors = [
+    '#tmm-grid-swatch-KINDLE .ebook-price-value',
+    '#tmm-grid-swatch-KINDLE .slot-price .a-color-price',
+    '#tmm-grid-swatch-KINDLE .slot-price',
+    '#tmmSwatches .swatchElement.selected[id*="KINDLE"] .ebook-price-value',
+    '#tmmSwatches .swatchElement.selected[id*="KINDLE"] .slot-price .a-color-price',
+    '#tmmSwatches .swatchElement.selected[id*="KINDLE"] .slot-price'
+  ];
+
+  for (const selector of kindleFormatSelectors) {
+    const element = document.querySelector(selector);
+    const amount = extractPriceAmount(element?.textContent || '');
+    if (amount) {
+      return amount;
+    }
+  }
+
+  // 2. Kindle/Apex layout selectors
+  const apexSelectors = [
     '#KindleALCLegacy_feature_div .apex-pricetopay-accessibility-label',
     '#KindleALCLegacy_feature_div .apex-pricetopay-value .a-offscreen',
     '#kindle-price',
     '#price'
   ];
 
-  for (const selector of specificSelectors) {
+  for (const selector of apexSelectors) {
     const element = document.querySelector(selector);
-    if (element) {
-      const priceText = element.textContent.trim();
-      if (priceText.includes('$')) {
-        return priceText;
-      }
+    const amount = extractPriceAmount(element?.textContent || '');
+    if (amount) {
+      return amount;
     }
   }
 
-  // 2. Try generic price selectors, but ONLY within purchase-related containers.
-  // Unscoped selectors like '.a-price .a-offscreen' can match unrelated prices.
-  const buyBox = document.querySelector('#KindleALCLegacy_feature_div') ||
-                 document.querySelector('#buyOneClick') ||
-                 document.querySelector('#buybox') ||
-                 document.querySelector('#buybox_feature_div') ||
-                 document.querySelector('#tmmSwatches') ||
-                 document.querySelector('#formats');
+  // 3. Generic fallback within purchase-related containers.
+  // Prefer $0.00 if present anywhere in these containers.
+  const containerSelectors = [
+    '#tmm-grid-swatch-KINDLE',
+    '#tmmSwatches .swatchElement.selected[id*="KINDLE"]',
+    '#tmmSwatches',
+    '#formats',
+    '#KindleALCLegacy_feature_div',
+    '#buyOneClick',
+    '#buybox',
+    '#buybox_feature_div'
+  ];
 
-  if (buyBox) {
-    const genericSelectors = [
+  const genericSelectors = [
+      '.ebook-price-value',
+      '.slot-price .a-color-price',
       '.apex-pricetopay-accessibility-label',
       '.apex-pricetopay-value .a-offscreen',
       '.a-price .a-offscreen',
-      '.a-color-price',
-      '[data-a-color="price"]'
-    ];
+      '[data-a-color="price"]',
+      '.a-color-price'
+  ];
+
+  let fallbackAmount = null;
+
+  for (const containerSelector of containerSelectors) {
+    const container = document.querySelector(containerSelector);
+    if (!container) continue;
 
     for (const selector of genericSelectors) {
-      const element = buyBox.querySelector(selector);
-      if (element) {
-        const priceText = element.textContent.trim();
-        if (priceText.includes('$')) {
-          return priceText;
+      const elements = container.querySelectorAll(selector);
+      for (const element of elements) {
+        const amount = extractPriceAmount(element?.textContent || '');
+        if (!amount) continue;
+
+        if (amount === '$0' || amount === '$0.00') {
+          return '$0.00';
+        }
+
+        if (!fallbackAmount) {
+          fallbackAmount = amount;
         }
       }
     }
   }
 
-  // 3. Final fallback: if the one-click purchase area clearly shows $0.00, use it.
+  if (fallbackAmount) {
+    return fallbackAmount;
+  }
+
+  // 4. Final fallback: parse one-click purchase text.
   const oneClickContainer = document.querySelector('#KindleALCLegacy_feature_div') ||
                             document.querySelector('#buyOneClick');
   if (oneClickContainer) {
-    const containerText = oneClickContainer.textContent;
-    if (containerText && containerText.includes('$0.00')) {
+    const containerText = oneClickContainer.textContent || '';
+
+    if (containerText.includes('$0.00')) {
       return '$0.00';
+    }
+
+    const amount = extractPriceAmount(containerText);
+    if (amount) {
+      return amount;
     }
   }
 
