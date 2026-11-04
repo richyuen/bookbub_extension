@@ -52,15 +52,13 @@ The BookBub Auto-Purchase Extension is built using Manifest V3 for Microsoft Edg
 **Key Configurations:**
 - `manifest_version: 3` - Uses latest Manifest V3 spec
 - **Permissions:**
-  - `storage` - Access to chrome.storage API
-  - `tabs` - Tab creation and management
-  - `activeTab` - Interact with current active tab
+  - `storage` - Local claim history and auto-pagination setting
 - **Host Permissions:**
-  - `*://www.bookbub.com/*` - BookBub content script injection
-  - `*://www.amazon.com/*` - Amazon content script injection
+  - `https://www.bookbub.com/*` - BookBub content script injection
+  - `https://www.amazon.com/*` - Amazon content script injection
 - **Content Scripts:**
-  - BookBub script runs on all BookBub pages
-  - Amazon script runs on all Amazon pages
+  - BookBub script runs on `https://www.bookbub.com` deal pages
+  - Amazon script runs on `https://www.amazon.com` product pages
   - Both use `document_idle` timing (after DOM ready)
 
 ### 2. Background Service Worker (background.js)

@@ -7,20 +7,20 @@
     "storage"
   ],
   "host_permissions": [
-    "*://www.bookbub.com/*",
-    "*://*.amazon.com/*"
+    "https://www.bookbub.com/*",
+    "https://www.amazon.com/*"
   ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["*://www.bookbub.com/*"],
+      "matches": ["https://www.bookbub.com/*"],
       "js": ["content/bookbub.js"],
       "run_at": "document_idle"
     },
     {
-      "matches": ["*://*.amazon.com/*"],
+      "matches": ["https://www.amazon.com/*"],
       "js": ["content/amazon.js"],
       "run_at": "document_idle"
     }

@@ -109,7 +109,7 @@ Storage get result: {test: 'hello'}
    ```json
    "content_scripts": [
      {
-       "matches": ["*://www.bookbub.com/*"],
+       "matches": ["https://www.bookbub.com/*"],
        "js": ["content/bookbub.js"],
    ```
 

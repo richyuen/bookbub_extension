@@ -35,7 +35,7 @@ None. The extension does not send data to the developer or to any third party. I
 
 - **Storage:** saves claim history and settings locally.
 - **Host access to `www.bookbub.com`:** runs the content script that adds the button and reads deal cards.
-- **Host access to `*.amazon.com`:** runs the content script that checks the price and library status and claims free books.
+- **Host access to `www.amazon.com`:** runs the content script that checks the price and library status and claims free books.
 
 The extension requests no other permissions.
 
