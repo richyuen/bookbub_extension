@@ -152,7 +152,7 @@ Click the extension icon to view:
 - **Local Storage Only**: Purchase history and settings are stored locally in your browser
 - **No External Servers**: All processing happens on your machine
 - **Open Source**: Code is fully transparent and auditable
-- **Privacy Policy**: https://richyuen.github.io/bookbub_extension/privacy-policy.html
+- **Privacy Policy**: https://richardyuen.com/bookbub_extension/privacy-policy.html
 
 ## Limitations
 
