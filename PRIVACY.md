@@ -2,6 +2,8 @@
 
 **Last updated:** November 3, 2026
 
+**Published at:** https://richardyuen.com/bookbub_extension/privacy-policy.html
+
 Book Deal Auto-Claimer ("the extension") is an unofficial browser extension for Microsoft Edge. This policy explains what the extension accesses, what it stores, and what it does with that information.
 
 ## Summary
