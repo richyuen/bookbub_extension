@@ -1,4 +1,4 @@
-// Background service worker for BookBub Auto-Purchase Extension
+// Background service worker for Book Deal Auto-Claimer
 
 let processingQueue = [];
 let isProcessing = false;
@@ -26,7 +26,7 @@ chrome.runtime.onInstalled.addListener(() => {
       });
     }
   });
-  console.log('BookBub Auto-Purchase Extension installed');
+  console.log('Book Deal Auto-Claimer installed');
 });
 
 // Listen for messages from content scripts
@@ -125,6 +125,9 @@ async function handleStartProcessing(books, bookbubTabId) {
   chrome.tabs.sendMessage(bookbubTabId, {
     type: 'PROCESSING_COMPLETE',
     stats: currentStats
+  }, () => {
+    // The BookBub tab may have been closed or navigated away.
+    void chrome.runtime.lastError;
   });
 }
 
@@ -182,34 +185,43 @@ function waitForTabProcessing(tabId) {
   return new Promise((resolve) => {
     let checkCount = 0;
     const maxChecks = 30; // 30 seconds max wait
+    let interval = null;
+    let listener = null;
+    let settled = false;
 
-    const interval = setInterval(() => {
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearInterval(interval);
+      if (listener) {
+        chrome.runtime.onMessage.removeListener(listener);
+      }
+      resolve();
+    };
+
+    interval = setInterval(() => {
       checkCount++;
 
       // Check if tab still exists
       chrome.tabs.get(tabId, (tab) => {
         if (chrome.runtime.lastError || !tab) {
-          clearInterval(interval);
-          resolve();
+          finish();
           return;
         }
 
         // Timeout after max checks
         if (checkCount >= maxChecks) {
           console.log('Timeout waiting for tab processing');
-          clearInterval(interval);
-          resolve();
+          finish();
         }
       });
     }, 1000);
 
     // Listen for completion message
-    const listener = (message, sender) => {
+    listener = (message, sender) => {
       if (sender.tab?.id === tabId &&
           (message.type === 'PURCHASE_COMPLETE' || message.type === 'PURCHASE_SKIPPED')) {
-        clearInterval(interval);
-        chrome.runtime.onMessage.removeListener(listener);
-        resolve();
+        finish();
       }
     };
     chrome.runtime.onMessage.addListener(listener);

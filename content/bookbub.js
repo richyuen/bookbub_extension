@@ -39,7 +39,7 @@ function init() {
   });
 }
 
-// Inject the "Start Auto-Purchase" button
+// Inject the "Start Auto-Claim" button
 function injectButton() {
   // Check if button already exists
   if (document.getElementById('bookbub-auto-purchase-btn')) {
@@ -129,11 +129,11 @@ function loadAutoPaginationSetting() {
 // Update button text based on auto-pagination state
 function updateButtonText(button) {
   button.textContent = autoNextPageEnabled
-    ? 'Start Auto-Purchase (Auto-Page ON)'
-    : 'Start Auto-Purchase';
+    ? 'Start Auto-Claim (Auto-Page ON)'
+    : 'Start Auto-Claim';
   button.title = autoNextPageEnabled
-    ? 'Click to start processing books. Auto-pagination enabled.'
-    : 'Click to start processing books. Auto-pagination disabled.';
+    ? 'Click to start claiming books. Auto-pagination enabled.'
+    : 'Click to start claiming books. Auto-pagination disabled.';
 }
 
 // Handle button click

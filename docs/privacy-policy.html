@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Book Deal Auto-Claimer</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f8f5;
+    color: #22352a;
+    line-height: 1.65;
+  }
+  main {
+    max-width: 760px;
+    margin: 40px auto;
+    background: #fff;
+    border: 1px solid #e2ece4;
+    border-radius: 14px;
+    padding: 40px 44px;
+    box-shadow: 0 10px 30px rgba(24, 73, 34, .06);
+  }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  .brand img { width: 44px; height: 44px; }
+  .brand span { font-weight: 700; color: #1b5e20; }
+  h1 { font-size: 30px; line-height: 1.2; margin: 0 0 4px; color: #16351c; letter-spacing: -.4px; }
+  .updated { color: #728077; font-size: 14px; margin-bottom: 26px; }
+  h2 { font-size: 18px; margin: 30px 0 8px; color: #1b5e20; }
+  p { margin: 0 0 12px; }
+  ul { margin: 0 0 14px; padding-left: 22px; }
+  li { margin: 4px 0; }
+  code { background: #eef5ef; border-radius: 4px; padding: 1px 5px; font-size: 90%; }
+  a { color: #2e7d32; }
+  .note {
+    margin-top: 30px;
+    padding: 14px 16px;
+    background: #eef7ef;
+    border-left: 4px solid #2e7d32;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  footer { margin-top: 30px; padding-top: 18px; border-top: 1px solid #e7efe8; font-size: 13px; color: #728077; }
+  @media (max-width: 640px) { main { margin: 16px; padding: 26px 22px; } h1 { font-size: 25px; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">
+    <img src="icon128.png" alt="">
+    <span>Book Deal Auto-Claimer</span>
+  </div>
+
+  <h1>Privacy Policy</h1>
+  <div class="updated">Last updated: November 3, 2026</div>
+
+  <p>Book Deal Auto-Claimer ("the extension") is an unofficial browser extension for Microsoft Edge. This policy explains what the extension accesses, what it stores, and what it does with that information.</p>
+
+  <h2>Summary</h2>
+  <p>The extension does not collect, transmit, sell, or share personal data. It has no servers, analytics, advertising, or remote code. Everything it stores stays in your browser.</p>
+
+  <h2>Information the extension accesses</h2>
+  <p>To perform its single purpose, the extension reads parts of the web pages you open:</p>
+  <ul>
+    <li><strong>BookBub deal pages:</strong> the extension reads the page to find book titles and Amazon links, and adds a "Start Auto-Claim" button to the page.</li>
+    <li><strong>Amazon product pages:</strong> the extension reads the page to check the Kindle price and whether the book is already in your Amazon library. When a book is free, it clicks Amazon's 1-Click button.</li>
+    <li><strong>Amazon account state:</strong> the extension relies on the Amazon session that is already signed in in your browser. It does not ask for, read, or store your Amazon password, payment card details, or other Amazon credentials.</li>
+  </ul>
+
+  <h2>Information stored on your device</h2>
+  <p>The extension stores the following data locally using the browser's <code>chrome.storage.local</code> API:</p>
+  <ul>
+    <li><strong>Claim history:</strong> a book identifier, the book title, a timestamp, and a source flag for books the extension has processed.</li>
+    <li><strong>Settings:</strong> your auto-pagination preference.</li>
+  </ul>
+  <p>This data is stored only on your device. It is not synced to your Microsoft account and is not sent anywhere. It remains until you use <strong>Clear Purchase History</strong> in the extension popup or uninstall the extension.</p>
+
+  <h2>Data sharing</h2>
+  <p>None. The extension does not send data to the developer or to any third party. It does not use analytics, advertising, tracking, or crash-reporting services.</p>
+
+  <h2>Permissions</h2>
+  <ul>
+    <li><strong>Storage:</strong> saves claim history and settings locally.</li>
+    <li><strong>Host access to <code>www.bookbub.com</code>:</strong> runs the content script that adds the button and reads deal cards.</li>
+    <li><strong>Host access to <code>*.amazon.com</code>:</strong> runs the content script that checks the price and library status and claims free books.</li>
+  </ul>
+  <p>The extension requests no other permissions.</p>
+
+  <h2>Children</h2>
+  <p>The extension is not directed at children under 13 and does not knowingly collect information from anyone.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy changes, the updated version will be posted at this URL with a new "last updated" date.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy: <a href="mailto:admin@richardyuen.com">admin@richardyuen.com</a></p>
+
+  <div class="note">This extension is independent and is not affiliated with, endorsed by, or sponsored by BookBub or Amazon.</div>
+
+  <footer>Book Deal Auto-Claimer v1.0.0 · <a href="https://github.com/richyuen/bookbub_extension">source code</a></footer>
+</main>
+</body>
+</html>

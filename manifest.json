@@ -1,16 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "BookBub Auto-Purchase",
+  "name": "Book Deal Auto-Claimer",
   "version": "1.0.0",
-  "description": "Automates claiming free books from BookBub deals using Amazon 1-Click purchasing",
+  "description": "Unofficial: claims free ebook deals from BookBub deal pages using Amazon 1-Click. Requires Amazon 1-Click enabled.",
   "permissions": [
-    "storage",
-    "tabs",
-    "activeTab"
+    "storage"
   ],
   "host_permissions": [
     "*://www.bookbub.com/*",
-    "*://amazon.com/*",
     "*://*.amazon.com/*"
   ],
   "background": {
@@ -23,10 +20,7 @@
       "run_at": "document_idle"
     },
     {
-      "matches": [
-        "*://amazon.com/*",
-        "*://*.amazon.com/*"
-      ],
+      "matches": ["*://*.amazon.com/*"],
       "js": ["content/amazon.js"],
       "run_at": "document_idle"
     }

@@ -3,282 +3,135 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BookBub Extension Icon Generator</title>
+  <title>Book Deal Auto-Claimer — Icon Generator</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      max-width: 800px;
+      max-width: 860px;
       margin: 50px auto;
       padding: 20px;
-      background: #f5f5f5;
+      background: #f5f8f5;
+      color: #22352a;
     }
-    h1 {
-      color: #333;
-      text-align: center;
-    }
-    .instructions {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
+    h1 { color: #16351c; text-align: center; }
+    .panel {
+      background: #fff;
+      padding: 22px;
+      border-radius: 10px;
       margin-bottom: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .preview-section {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      border: 1px solid #e2ece4;
+      box-shadow: 0 4px 14px rgba(24, 73, 34, .06);
     }
     .preview-grid {
       display: flex;
-      gap: 30px;
+      gap: 34px;
       justify-content: center;
       align-items: flex-end;
       margin: 20px 0;
+      flex-wrap: wrap;
     }
-    .preview-item {
-      text-align: center;
-    }
+    .preview-item { text-align: center; }
     .preview-item canvas {
-      border: 2px solid #ddd;
-      border-radius: 4px;
+      border: 1px solid #dbe7dd;
+      border-radius: 6px;
       display: block;
       margin: 10px auto;
+      background: #fff;
     }
-    .preview-item label {
-      font-weight: bold;
-      color: #666;
-      display: block;
-      margin-bottom: 5px;
-    }
-    .button-section {
-      text-align: center;
-      margin-top: 20px;
-    }
+    .preview-item label { font-weight: 700; color: #5b6f60; display: block; }
+    .button-section { text-align: center; margin-top: 20px; }
     button {
-      background: #4CAF50;
-      color: white;
+      background: #2e7d32;
+      color: #fff;
       border: none;
       padding: 12px 30px;
       font-size: 16px;
-      font-weight: bold;
-      border-radius: 5px;
+      font-weight: 700;
+      border-radius: 6px;
       cursor: pointer;
       margin: 5px;
-      transition: background 0.3s;
     }
-    button:hover {
-      background: #45a049;
-    }
-    button:active {
-      background: #3d8b40;
-    }
-    .success {
-      background: #e8f5e9;
-      color: #2e7d32;
-      padding: 15px;
-      border-radius: 5px;
-      margin-top: 20px;
-      display: none;
-      text-align: center;
-      font-weight: bold;
-    }
+    button:hover { background: #256428; }
     .info {
-      background: #e3f2fd;
-      color: #1565c0;
+      background: #eef7ef;
+      color: #2b5733;
       padding: 15px;
-      border-radius: 5px;
-      margin-top: 10px;
+      border-radius: 6px;
+      margin-top: 14px;
+      line-height: 1.55;
     }
-    ol {
-      margin-left: 20px;
-    }
-    li {
-      margin: 10px 0;
-      line-height: 1.6;
-    }
+    ol { margin-left: 20px; }
+    li { margin: 8px 0; line-height: 1.55; }
+    code { background: #eef5ef; border-radius: 4px; padding: 1px 5px; }
+    .success { background: #e8f5e9; color: #2e7d32; padding: 14px; border-radius: 6px; margin-top: 16px; display: none; text-align: center; font-weight: 700; }
   </style>
 </head>
 <body>
-  <h1>📚 BookBub Extension Icon Generator</h1>
+  <h1>Book Deal Auto-Claimer — Icon Generator</h1>
 
-  <div class="instructions">
+  <div class="panel">
     <h2>Instructions</h2>
     <ol>
-      <li>Preview the icons below to see how they'll look</li>
-      <li>Click <strong>"Download All Icons"</strong> button</li>
-      <li>Three PNG files will download to your Downloads folder</li>
-      <li>Move the downloaded files to this <code>icons/</code> folder</li>
-      <li>Delete or rename this HTML file (no longer needed)</li>
-      <li>Reload the extension in Edge</li>
+      <li>Preview the icons below.</li>
+      <li>Click <strong>Download All Icons</strong>.</li>
+      <li>Move the downloaded files into this <code>icons/</code> folder, replacing the existing files.</li>
+      <li>For the Partner Center store logo, use the 300 × 300 download.</li>
+      <li>Reload the extension in <code>edge://extensions/</code>.</li>
     </ol>
   </div>
 
-  <div class="preview-section">
+  <div class="panel">
     <h2>Icon Preview</h2>
     <div class="preview-grid">
-      <div class="preview-item">
-        <label>16×16 pixels</label>
-        <canvas id="canvas16" width="16" height="16"></canvas>
-      </div>
-      <div class="preview-item">
-        <label>48×48 pixels</label>
-        <canvas id="canvas48" width="48" height="48"></canvas>
-      </div>
-      <div class="preview-item">
-        <label>128×128 pixels</label>
-        <canvas id="canvas128" width="128" height="128"></canvas>
-      </div>
+      <div class="preview-item"><label>16 × 16</label><canvas id="canvas16" width="16" height="16"></canvas></div>
+      <div class="preview-item"><label>48 × 48</label><canvas id="canvas48" width="48" height="48"></canvas></div>
+      <div class="preview-item"><label>128 × 128</label><canvas id="canvas128" width="128" height="128"></canvas></div>
+      <div class="preview-item"><label>300 × 300 (store)</label><canvas id="canvas300" width="300" height="300"></canvas></div>
     </div>
-
     <div class="button-section">
       <button onclick="downloadAllIcons()">Download All Icons</button>
     </div>
-
     <div class="info">
-      <strong>Note:</strong> The icons feature a green background (#4CAF50) with a white book symbol.
-      They'll match the extension's color scheme!
+      Green rounded square, white open book, amber check badge. The design is original and does not use
+      BookBub or Amazon marks.
     </div>
-
-    <div id="success" class="success">
-      ✅ All icons downloaded successfully! Check your Downloads folder.
-    </div>
+    <div id="success" class="success">All four PNGs downloaded. Check your Downloads folder.</div>
   </div>
 
   <script>
-    // Draw icon on canvas
-    function drawIcon(canvas, size) {
+    const ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+      <rect width="128" height="128" rx="28" fill="#2E7D32"/>
+      <path d="M28 33.5c12.5-3.8 24-3.4 36 1.8 12-5.2 23.5-5.6 36-1.8v57.8c-12.5-3.8-24-3.4-36 1.8-12-5.2-23.5-5.6-36-1.8V33.5z" fill="#FFFFFF"/>
+      <path d="M64 35.3v57.8" stroke="#2E7D32" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="96" cy="96" r="25" fill="#FFC107" stroke="#2E7D32" stroke-width="6"/>
+      <path d="M84 96.5l8 8 16-17" fill="none" stroke="#2E7D32" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+
+    const iconUrl = 'data:image/svg+xml;base64,' + btoa(ICON_SVG);
+
+    function drawIcon(canvas) {
       const ctx = canvas.getContext('2d');
-
-      // Green background
-      ctx.fillStyle = '#4CAF50';
-      ctx.fillRect(0, 0, size, size);
-
-      // White book icon
-      ctx.fillStyle = 'white';
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = size / 32;
-
-      if (size === 16) {
-        // Simplified book for 16x16
-        // Book rectangle
-        ctx.fillRect(4, 3, 8, 10);
-        // Book spine line
-        ctx.strokeRect(4, 3, 8, 10);
-        // Pages
-        ctx.beginPath();
-        ctx.moveTo(8, 3);
-        ctx.lineTo(8, 13);
-        ctx.stroke();
-      } else if (size === 48) {
-        // Medium detail book for 48x48
-        const bookWidth = 24;
-        const bookHeight = 32;
-        const x = (size - bookWidth) / 2;
-        const y = (size - bookHeight) / 2;
-
-        // Book cover
-        ctx.fillRect(x, y, bookWidth, bookHeight);
-        ctx.strokeRect(x, y, bookWidth, bookHeight);
-
-        // Pages effect
-        ctx.beginPath();
-        ctx.moveTo(x + bookWidth / 2, y);
-        ctx.lineTo(x + bookWidth / 2, y + bookHeight);
-        ctx.stroke();
-
-        // Add some horizontal lines for pages
-        ctx.lineWidth = 1;
-        for (let i = 1; i < 4; i++) {
-          const lineY = y + (bookHeight / 4) * i;
-          ctx.beginPath();
-          ctx.moveTo(x + 4, lineY);
-          ctx.lineTo(x + bookWidth - 4, lineY);
-          ctx.stroke();
-        }
-      } else {
-        // Detailed book for 128x128
-        const bookWidth = 70;
-        const bookHeight = 90;
-        const x = (size - bookWidth) / 2;
-        const y = (size - bookHeight) / 2;
-
-        // Book cover
-        ctx.fillRect(x, y, bookWidth, bookHeight);
-
-        // Book spine shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-        ctx.fillRect(x, y, 8, bookHeight);
-
-        // Book cover border
-        ctx.fillStyle = 'white';
-        ctx.strokeRect(x, y, bookWidth, bookHeight);
-
-        // Pages effect - middle line
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(x + bookWidth / 2, y);
-        ctx.lineTo(x + bookWidth / 2, y + bookHeight);
-        ctx.stroke();
-
-        // Horizontal lines for pages
-        ctx.lineWidth = 1.5;
-        const numLines = 6;
-        for (let i = 1; i < numLines; i++) {
-          const lineY = y + (bookHeight / numLines) * i;
-          ctx.beginPath();
-          ctx.moveTo(x + 12, lineY);
-          ctx.lineTo(x + bookWidth - 12, lineY);
-          ctx.stroke();
-        }
-
-        // Add "BB" text in the top portion
-        ctx.font = 'bold 28px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('BB', x + bookWidth / 2, y + 25);
-      }
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      img.src = iconUrl;
     }
 
-    // Initialize - draw all icons
-    function init() {
-      drawIcon(document.getElementById('canvas16'), 16);
-      drawIcon(document.getElementById('canvas48'), 48);
-      drawIcon(document.getElementById('canvas128'), 128);
-    }
-
-    // Download a single icon
     function downloadIcon(canvasId, filename) {
-      const canvas = document.getElementById(canvasId);
-      const url = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.download = filename;
-      link.href = url;
+      link.href = document.getElementById(canvasId).toDataURL('image/png');
       link.click();
     }
 
-    // Download all icons
     function downloadAllIcons() {
       downloadIcon('canvas16', 'icon16.png');
-
-      // Stagger downloads to avoid browser blocking
-      setTimeout(() => {
-        downloadIcon('canvas48', 'icon48.png');
-      }, 100);
-
-      setTimeout(() => {
-        downloadIcon('canvas128', 'icon128.png');
-      }, 200);
-
-      // Show success message
-      setTimeout(() => {
-        document.getElementById('success').style.display = 'block';
-      }, 500);
+      setTimeout(() => downloadIcon('canvas48', 'icon48.png'), 100);
+      setTimeout(() => downloadIcon('canvas128', 'icon128.png'), 200);
+      setTimeout(() => downloadIcon('canvas300', 'icon300.png'), 300);
+      setTimeout(() => { document.getElementById('success').style.display = 'block'; }, 600);
     }
 
-    // Draw icons on page load
-    init();
+    ['16', '48', '128', '300'].forEach(size => drawIcon(document.getElementById('canvas' + size)));
   </script>
 </body>
 </html>

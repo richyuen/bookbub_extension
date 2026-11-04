@@ -1,6 +1,6 @@
-# BookBub Auto-Purchase Extension
+# Book Deal Auto-Claimer
 
-A Microsoft Edge browser extension that automates claiming free books from BookBub deals by purchasing them on Amazon using 1-Click purchasing.
+An unofficial Microsoft Edge browser extension that automates claiming free books from BookBub deals by purchasing them on Amazon using 1-Click purchasing. Not affiliated with BookBub or Amazon.
 
 ## Features
 
@@ -33,7 +33,7 @@ Before using this extension, ensure:
 
 ### Verify Installation
 
-- You should see the BookBub Auto-Purchase icon in your extensions toolbar
+- You should see the Book Deal Auto-Claimer icon in your extensions toolbar
 - Click the icon to open the popup and verify it displays correctly
 
 ## Usage
@@ -49,8 +49,8 @@ Before using this extension, ensure:
    - Navigate to BookBub (e.g., `https://www.bookbub.com/ebook-deals/free-kindle-books`)
    - Apply any filters you want (genre, ratings, etc.)
 
-3. **Start Auto-Purchase**
-   - Look for the green **"Start Auto-Purchase"** button (bottom-right corner)
+3. **Start Auto-Claim**
+   - Look for the green **"Start Auto-Claim"** button (bottom-right corner)
    - Click the button to begin processing
    - The button will show "Processing..." while working
 
@@ -70,7 +70,7 @@ Before using this extension, ensure:
 The extension consists of three main components:
 
 1. **BookBub Content Script** (`content/bookbub.js`)
-   - Injects the "Start Auto-Purchase" button on BookBub pages
+   - Injects the "Start Auto-Claim" button on BookBub pages
    - Scrapes book deals (title, Amazon link, price)
    - Filters out already-purchased books
    - Sends unpurchased books to the background worker
@@ -148,10 +148,11 @@ Click the extension icon to view:
 
 ## Privacy & Data
 
-- **No Data Collection**: This extension does not collect or transmit any personal data
-- **Local Storage Only**: Purchase history is stored locally in your browser
+- **No Data Transmission**: The extension does not send data to the developer or any third party
+- **Local Storage Only**: Purchase history and settings are stored locally in your browser
 - **No External Servers**: All processing happens on your machine
 - **Open Source**: Code is fully transparent and auditable
+- **Privacy Policy**: https://richyuen.github.io/bookbub_extension/privacy-policy.html
 
 ## Limitations
 
@@ -159,7 +160,7 @@ Click the extension icon to view:
 - **1-Click Only**: Requires 1-Click purchasing to be enabled
 - **US Amazon**: Primarily tested with Amazon.com (US)
 - **Free Books Only**: Only processes books showing $0.00 price
-- **Single Page**: Processes one page at a time (no automatic pagination)
+- **Auto-Pagination**: Optional; moves to the next page when the last book was claimed
 
 ## Future Improvements
 
@@ -226,7 +227,7 @@ For issues, bugs, or feature requests:
 
 1. Check the Troubleshooting section above
 2. Review browser console for error messages
-3. Open an issue on the GitHub repository (if applicable)
+3. Open an issue on the GitHub repository, or email **admin@richardyuen.com**
 
 ## License
 
